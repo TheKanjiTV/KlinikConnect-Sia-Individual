@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Environment files (Laravel's .env is covered by its own .gitignore)
+/.env
+/.env.backup
+/.env.production
+
+# Build output
+dist/
+dist-ssr/
+public/build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS files
+.DS_Store
+Thumbs.db
+.idea/
