@@ -84,24 +84,17 @@ jobs:
     runs-on: [self-hosted, linux, x64, klinikconnect]
     permissions:
       contents: read
-      packages: read
+      packages: write
     if: >-
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
 
     steps:
-      - name: Log in to GHCR
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHCR_ACTOR: ${{ github.actor }}
-        run: |
-          set -euo pipefail
-          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
-
+      # Both GHCR packages are public. Pull anonymously to avoid the
+      # cross-repository GITHUB_TOKEN package permission mismatch.
       - name: Pull and start production stack
         run: |
           set -euo pipefail
-          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
           cd /opt/klinikconnect
           docker compose --env-file .env.production -f compose.prod.yaml pull
           docker compose --env-file .env.production -f compose.prod.yaml up -d --remove-orphans
