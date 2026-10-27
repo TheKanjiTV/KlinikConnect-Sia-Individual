@@ -72,7 +72,8 @@ Set at least:
   e.g. `localhost:8080`.
 - `CORS_ALLOWED_ORIGINS` — the full public URL
 - `DB_PASSWORD` and `DB_ROOT_PASSWORD`
-- `RUN_SEEDER=false` once you have changed/removed the demo accounts
+- `RUN_SEEDER=false` by default. Enable it only for an isolated demo environment,
+  because the demo accounts use a shared, known password.
 
 Keep `SESSION_SECURE_COOKIE=true` when the public URL uses HTTPS. If you only
 want to test over plain HTTP (for example `http://SERVER_IP:8080`), set
@@ -132,7 +133,8 @@ secrets are missing, so the build pipeline still succeeds.
 
 ## Demo accounts
 
-`RUN_SEEDER=true` creates these accounts with password `islamislam`:
+`RUN_SEEDER=true` creates these accounts with password `islamislam`. Keep seeding
+disabled on a public deployment:
 
 | Role | Email |
 | --- | --- |
