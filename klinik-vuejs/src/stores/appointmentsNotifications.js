@@ -14,7 +14,7 @@ export const useAppointmentsNotificationsStore = defineStore('appointmentNotific
 
     const initializeEventSource = async () => {
         const token = localStorage.getItem('token');
-        eventSource = new EventSource(`${backendUrl}/backend/api/v1/sse?token=${token}`);
+        eventSource = new EventSource(`${backendUrl}/api/v1/sse?token=${token}`);
 
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);

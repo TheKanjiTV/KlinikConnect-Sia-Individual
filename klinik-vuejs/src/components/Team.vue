@@ -4,50 +4,44 @@
 
 <template>
 <div class="flex justify-center dark:bg-darkmodebg bg-bgcolor">
-    <div v-motion-slide-visible-top class="w-[60%] mt-20 mb-20 max-[1536px]:w-[90%] max-[1024px]:text-center max-[1024px]:flex max-[1024px]:items-center max-[1024px]:flex-col">
+    <div v-motion-slide-visible-top class="w-[60%] mt-20 mb-20 max-[1536px]:w-[90%] max-[1024px]:w-[80%] max-[1024px]:text-center">
         <h3 class="font-recursive text-[#A1A7B0] tracking-widest">Meet Our Experts</h3>
         <h1 class="font-recursive dark:text-white font-bold text-6xl max-[1024px]:text-4xl text-[#333333] mt-7">Our Team</h1>
-        <div class="flex gap-7 mt-14 max-[1024px]:flex-col max-[1024px]:w-[90%]">
-            <div class="flex flex-col w-1/4 max-[1024px]:w-full">
-                <div>
-                    <img src="/src/assets/images/doctor1.jpg" alt="" class="rounded">
-                </div>
-                <div class="bg-white dark:bg-primarycardsbg shadow-lg p-5 flex flex-col flex-grow">
-                    <h1 class="font-recursive dark:text-white font-bold text-3xl max-[1024px]:text-4xl text-[#333333] mt-7">James Smith</h1>
-                    <h3 class="font-recursive text-[#A1A7B0] tracking-widest mt-5">Head Doctor</h3>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-7 mt-14">
+            <div class="flex flex-col overflow-hidden rounded-xl bg-white dark:bg-primarycardsbg shadow-lg">
+                <img src="/src/assets/images/doctor1.jpg" alt="James Smith" class="w-full h-52 sm:h-64 object-cover object-top">
+                <div class="p-4 sm:p-5 flex flex-col flex-grow">
+                    <h2 class="font-recursive dark:text-white font-bold text-lg sm:text-2xl text-[#333333]">James Smith</h2>
+                    <h3 class="font-recursive text-[#A1A7B0] tracking-widest text-xs sm:text-sm mt-2">Head Doctor</h3>
                 </div>
             </div>
 
-            <div class="flex flex-col w-1/4 max-[1024px]:w-full">
-                <div>
-                    <img src="/src/assets/images/doctor2.jpg" alt="" class="rounded">
-                </div>
-                <div class="bg-white dark:bg-primarycardsbg shadow-lg p-5 flex flex-col flex-grow">
-                    <h1 class="font-recursive dark:text-white font-bold text-3xl max-[1024px]:text-4xl text-[#333333] mt-7">Daniel Lee</h1>
-                    <h3 class="font-recursive text-[#A1A7B0] tracking-widest mt-5">Primary Care</h3>
+            <div class="flex flex-col overflow-hidden rounded-xl bg-white dark:bg-primarycardsbg shadow-lg">
+                <img src="/src/assets/images/doctor2.jpg" alt="Daniel Lee" class="w-full h-52 sm:h-64 object-cover object-top">
+                <div class="p-4 sm:p-5 flex flex-col flex-grow">
+                    <h2 class="font-recursive dark:text-white font-bold text-lg sm:text-2xl text-[#333333]">Daniel Lee</h2>
+                    <h3 class="font-recursive text-[#A1A7B0] tracking-widest text-xs sm:text-sm mt-2">Primary Care</h3>
                 </div>
             </div>
 
-            <div class="flex flex-col w-1/4 max-[1024px]:w-full">
-                <div>
-                    <img src="/src/assets/images/doctor4.jpg" alt="" class="rounded">
-                </div>
-                <div class="bg-white dark:bg-primarycardsbg shadow-lg p-5 flex flex-col flex-grow">
-                    <h1 class="font-recursive dark:text-white font-bold text-3xl max-[1024px]:text-4xl text-[#333333] mt-7">William Miller</h1>
-                    <h3 class="font-recursive text-[#A1A7B0] tracking-widest mt-5">Surgical Expert</h3>
+            <div class="flex flex-col overflow-hidden rounded-xl bg-white dark:bg-primarycardsbg shadow-lg">
+                <img src="/src/assets/images/doctor4.jpg" alt="William Miller" class="w-full h-52 sm:h-64 object-cover object-top">
+                <div class="p-4 sm:p-5 flex flex-col flex-grow">
+                    <h2 class="font-recursive dark:text-white font-bold text-lg sm:text-2xl text-[#333333]">William Miller</h2>
+                    <h3 class="font-recursive text-[#A1A7B0] tracking-widest text-xs sm:text-sm mt-2">Surgical Expert</h3>
                 </div>
             </div>
 
-            <div class="flex flex-col w-1/4 max-[1024px]:w-full">
-                <div>
-                    <img src="/src/assets/images/doctor6.jpg" alt="" class="rounded">
-                </div>
-                <div class="bg-white dark:bg-primarycardsbg shadow-lg p-5 flex flex-col flex-grow">
-                    <h1 class="font-recursive dark:text-white font-bold text-3xl max-[1024px]:text-4xl text-[#333333] mt-7">Charles Wilson</h1>
-                    <h3 class="font-recursive text-[#A1A7B0] tracking-widest mt-5">Diagnostic Specialist</h3>
+            <div class="flex flex-col overflow-hidden rounded-xl bg-white dark:bg-primarycardsbg shadow-lg">
+                <img src="/src/assets/images/doctor6.jpg" alt="Charles Wilson" class="w-full h-52 sm:h-64 object-cover object-top">
+                <div class="p-4 sm:p-5 flex flex-col flex-grow">
+                    <h2 class="font-recursive dark:text-white font-bold text-lg sm:text-2xl text-[#333333]">Charles Wilson</h2>
+                    <h3 class="font-recursive text-[#A1A7B0] tracking-widest text-xs sm:text-sm mt-2">Diagnostic Specialist</h3>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Navigation buttons (commented out) -->
         <!-- 
@@ -68,8 +62,6 @@
             </div>
         </div>
         -->
-    </div>
-</div>
 
 
 

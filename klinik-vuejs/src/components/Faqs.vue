@@ -5,17 +5,17 @@
 
 <template>
     <div class="flex justify-center">
-        <div v-motion-slide-visible-top class="w-[60%] mt-20 mb-20 flex max-[1024px]:flex-col max-[1024px]:w-[80%] max-[1536px]:w-[90%]">
+        <div v-motion-slide-visible-top class="w-[60%] mt-20 mb-20 flex max-[1024px]:flex-col max-[1024px]:w-[90%] max-[1536px]:w-[90%]">
             <div class="flex flex-col w-1/2 max-[1024px]:w-full max-[1024px]:text-center">
                 <h3 class="font-recursive text-[#A1A7B0] tracking-widest">Your Questions Answered</h3>
                 <h1 class="font-recursive font-bold dark:text-white text-6xl max-[1024px]:text-4xl text-[#333333] mt-7">FAQs</h1>
-                <p class="font-recursive dark:text-gray-400 w-[80%] max-[1024px]:w-full text-[#333333] tracking-widest text-xl mt-10">
+                <p class="font-recursive dark:text-gray-400 w-[80%] max-[1024px]:w-full text-[#333333] tracking-wide text-xl mt-10">
                     We have compiled answers to some common questions to help you understand our services better.
                 </p>
             </div>
-            <div class="w-1/2 max-[1024px]:w-full">
-                <div class="max-w-screen-xl mx-auto px-5 bg-white dark:bg-primarycardsbg min-h-sceen">
-                    <div class="grid divide-y divide-neutral-200 max-w-xl mx-auto mt-8">
+            <div class="w-1/2 max-[1024px]:w-full max-[1024px]:mt-10">
+                <div class="w-full bg-white dark:bg-primarycardsbg rounded-xl shadow-sm p-6 sm:p-8">
+                    <div class="grid divide-y divide-neutral-200">
                         <div class="py-5">
                             <details class="group">
                                 <summary class="flex justify-between items-center font-recursive dark:text-gray-300 font-bold cursor-pointer list-none">

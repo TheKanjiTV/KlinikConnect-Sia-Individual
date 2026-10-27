@@ -190,7 +190,7 @@ onMounted(async () => {
 
 
         <RouterLink v-else to="/login"
-          class="border bg-primarycolor text-center max-[768px]:hidden hover:bg-transparent hover: border-gray-500 w-28 py-2 rounded text-white font-recursive font-semibold hover:text-primarycolor">
+          class="border bg-primarycolor text-center max-[768px]:hidden hover:bg-transparent hover:border-gray-500 w-28 py-2 rounded text-white font-recursive font-semibold hover:text-primarycolor">
           Login</RouterLink>
 
         <!-- <button

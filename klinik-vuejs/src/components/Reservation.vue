@@ -75,32 +75,33 @@ const goToStripeCheckout = (checkoutUrl) => {
 
 <template>
 
-    <div class="flex justify-center">
-        <div
-            class="w-[60%] relative max-[1536px]:w-[90%] max-[1280px]:w-[80%] max-[1024px]:py-[100px] flex max-[1024px]:flex-col max-[1024px]:w-full">
+    <div class="flex justify-center px-4">
+        <div class="w-[60%] max-[1536px]:w-[90%] max-[1024px]:w-full relative z-20 max-[1024px]:mt-10">
             <div id="bookNow-section"
-                class="bg-white dark:bg-slate-800 shadow-lg absolute bottom-0 transform translate-y-[75%] h-auto md:h-52 rounded-lg p-6 md:p-10 w-full flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10">
-                <div class="w-full md:w-1/3 flex flex-col items-center">
-                    <h1 class="font-recursive text-2xl font-bold dark:text-gray-300">Select Department</h1>
-                    <select @change="fetchDoctors" v-model="departmentId"
+                class="scroll-mt-24 bg-white dark:bg-slate-800 shadow-xl rounded-xl p-6 md:p-8 w-full grid gap-6 md:grid-cols-3 md:items-end">
+                <div class="w-full flex flex-col items-center">
+                    <label for="department-select"
+                        class="font-recursive text-xl font-bold dark:text-gray-300">Select Department</label>
+                    <select id="department-select" @change="fetchDoctors" v-model="departmentId"
                         class="select select-bordered w-full max-w-xs mt-3 bg-white dark:bg-slate-700 dark:text-gray-300">
                         <option value="" disabled selected>Select Department</option>
                         <option v-for="department in departments" :key="department.id" :value="department.id">
                             {{ department.name }}</option>
                     </select>
                 </div>
-                <div class="w-full md:w-1/3 flex flex-col items-center">
-                    <h1 class="font-recursive text-2xl font-bold dark:text-gray-300">Choose Doctor</h1>
-                    <select v-model="doctorId"
+                <div class="w-full flex flex-col items-center">
+                    <label for="doctor-select"
+                        class="font-recursive text-xl font-bold dark:text-gray-300">Choose Doctor</label>
+                    <select id="doctor-select" v-model="doctorId"
                         class="select select-bordered w-full max-w-xs mt-3 bg-white dark:bg-slate-700 dark:text-gray-300">
                         <option disabled selected>Select a doctor</option>
                         <option v-for="doctor in doctors" :key="doctor.id" :value="doctor.id">{{ doctor.name }} - ${{
                             doctor.appointment_price }}</option>
                     </select>
                 </div>
-                <div class="w-full md:w-1/3 flex flex-col md:flex-row items-center">
-                    <div class="flex flex-col items-center md:items-start">
-                        <h1 class="font-recursive text-2xl font-bold dark:text-gray-300">Select Date</h1>
+                <div class="w-full flex flex-col sm:flex-row items-center sm:items-end sm:justify-center gap-3">
+                    <div class="flex flex-col items-center sm:items-start">
+                        <label class="font-recursive text-xl font-bold dark:text-gray-300">Select Date</label>
                         <DatePicker v-model="date" :pt="{
                             day: {
                                 class: 'bg-primarycolor'
@@ -111,13 +112,13 @@ const goToStripeCheckout = (checkoutUrl) => {
 
                     </div>
                     <button @click="searchAvailability" type="submit"
-                        class="p-2.5 h-fit flex-row ms-2 border-none text-sm font-medium text-white bg-primarycolor rounded-lg border focus:ring-4 focus:outline-none focus:ring-blue-300 mt-3 md:mt-11">
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 h-fit border-none text-sm font-medium text-white bg-primarycolor rounded-lg focus:ring-4 focus:outline-none focus:ring-blue-300">
                         <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 20 20">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
                         </svg>
-                        <span class="sr-only">Search</span>
+                        Search
                     </button>
                 </div>
             </div>
@@ -130,14 +131,14 @@ const goToStripeCheckout = (checkoutUrl) => {
     </dialog>
 
     <dialog v-if="showTimesModal" id="times-modal" class="modal modal-middle">
-        <div class="modal-box bg-white rounded-lg shadow-lg p-6">
-            <h3 v-if="availableTimes" class="text-xl font-semibold text-gray-800 mb-4">Available Times</h3>
-            <h3 v-else class="text-xl font-semibold text-gray-800 mb-4">No Available times for this day right now!
+        <div class="modal-box bg-white rounded-lg shadow-lg p-6 max-w-2xl">
+            <h3 v-if="availableTimes.length" class="text-xl font-semibold text-gray-800 mb-4">Available Times</h3>
+            <h3 v-else class="text-xl font-semibold text-gray-800 mb-4">No available times for this day right now!
             </h3>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div v-if="availableTimes" v-for="time in availableTimes" :key="time.id"
-                    class="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div v-for="time in availableTimes" :key="time.id"
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-100 p-3 rounded-lg">
                     <span class="text-gray-700">{{ `${time.start_time} - ${dateToShowInModal} (${time.day})`
                         }}</span>
                     <button @click="reserveAppointment(time.start_time, dateToShowInModal, time.doctor_id, time.day)"
@@ -147,12 +148,11 @@ const goToStripeCheckout = (checkoutUrl) => {
                 </div>
 
             </div>
-            <div class="flex justify-end px-10">
-                <form method="dialog" class=" w-10">
-                    <button @click="closeModal" class="btn">close</button>
+            <div class="modal-action">
+                <form method="dialog">
+                    <button class="btn btn-sm">Close</button>
                 </form>
             </div>
-
         </div>
     </dialog>
 </template>

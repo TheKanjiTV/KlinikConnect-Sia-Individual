@@ -535,11 +535,15 @@ router.beforeEach(async (to, from, next) => {
     to.meta.isAuth = isAuth;
 
     const userData = useGetUserData();
-    try {
-        const photo = await userData.getPhoto();
-        to.meta.requiresHeaderPhoto = photo;
-    } catch (error) {
-        console.error('Error fetching user photo:', error);
+    if (isAuth) {
+        try {
+            const photo = await userData.getPhoto();
+            to.meta.requiresHeaderPhoto = photo;
+        } catch (error) {
+            console.error('Error fetching user photo:', error);
+            to.meta.requiresHeaderPhoto = null;
+        }
+    } else {
         to.meta.requiresHeaderPhoto = null;
     }
 
