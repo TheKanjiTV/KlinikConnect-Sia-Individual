@@ -21,7 +21,8 @@ The workflow at `.github/workflows/docker-publish.yml`:
 3. Pushes the images to GitHub Container Registry (`ghcr.io`) on non-PR runs:
    - `ghcr.io/thekanjitiv/klinikconnect-api`
    - `ghcr.io/thekanjitiv/klinikconnect-web`
-4. Optionally deploys over SSH when the server secrets below are configured.
+4. Deploys to the AWS EC2 host through a repository self-hosted runner after a
+   push to `main` or a version tag. Pull requests never run on the EC2 runner.
 
 Pull requests only build the images; they are never pushed.
 
@@ -115,21 +116,21 @@ docker compose --env-file .env.production -f compose.prod.yaml up --build
 
 The app is then available at <http://localhost:8080>.
 
-## 3. Optional: automatic deployment over SSH
+## 3. Automatic deployment on AWS
 
-Add these repository secrets (**Settings → Secrets and variables → Actions**):
+The `deploy` job uses a repository self-hosted Linux runner labelled
+`klinikconnect`. Install that runner on the EC2 host from **Settings → Actions →
+Runners → New self-hosted runner**, then configure it with the `klinikconnect`
+label. Keep it dedicated to this repository and only run trusted deployment
+jobs on it. GitHub warns against self-hosted runners on public repositories;
+this workflow therefore keeps pull request builds on GitHub-hosted runners and
+limits the EC2 runner to `main` pushes, version tags, and manual runs on those
+refs.
 
-| Secret | Required | Description |
-| --- | --- | --- |
-| `DEPLOY_HOST` | yes | Server IP or hostname |
-| `DEPLOY_USER` | yes | SSH user, e.g. `ubuntu` |
-| `DEPLOY_SSH_KEY` | yes | Private SSH key for that user |
-| `DEPLOY_PORT` | no | SSH port, defaults to `22` |
-| `DEPLOY_PATH` | no | Project folder on the server, defaults to `/opt/klinikconnect` |
-
-The deploy job logs in to GHCR with the workflow token, runs `docker compose
-pull`, and recreates the containers. It is skipped automatically when the
-secrets are missing, so the build pipeline still succeeds.
+On the EC2 host, keep `compose.prod.yaml` and the private `.env.production` in
+`/opt/klinikconnect`. The deploy job uses its temporary `GITHUB_TOKEN` to log
+into GHCR, pulls the images, and runs `docker compose up -d`. No EC2 private key
+or long-lived GitHub token needs to be stored in repository secrets.
 
 ## Demo accounts
 
