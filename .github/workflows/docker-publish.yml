@@ -84,31 +84,36 @@ jobs:
     runs-on: [self-hosted, linux, x64, klinikconnect]
     permissions:
       contents: read
-      packages: write
     if: >-
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Set deployment image tags
         run: |
           set -euo pipefail
-          echo "API_IMAGE=ghcr.io/thekanjitiv/klinikconnect-api:sha-${GITHUB_SHA}" >> "$GITHUB_ENV"
-          echo "WEB_IMAGE=ghcr.io/thekanjitiv/klinikconnect-web:sha-${GITHUB_SHA}" >> "$GITHUB_ENV"
+          echo "API_IMAGE=klinikconnect-api:sha-${GITHUB_SHA}" >> "$GITHUB_ENV"
+          echo "WEB_IMAGE=klinikconnect-web:sha-${GITHUB_SHA}" >> "$GITHUB_ENV"
 
-      - name: Log in to GHCR
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHCR_ACTOR: ${{ github.actor }}
+      - name: Build production images on server
         run: |
           set -euo pipefail
-          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
+          docker build --pull \
+            -f "$GITHUB_WORKSPACE/klinik-laravel-api/Dockerfile.prod" \
+            -t "$API_IMAGE" \
+            "$GITHUB_WORKSPACE/klinik-laravel-api"
+          docker build --pull \
+            -f "$GITHUB_WORKSPACE/klinik-vuejs/Dockerfile.prod" \
+            -t "$WEB_IMAGE" \
+            "$GITHUB_WORKSPACE/klinik-vuejs"
 
-      - name: Pull and start production stack
+      - name: Start production stack
         run: |
           set -euo pipefail
-          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
           cd /opt/klinikconnect
-          docker compose --env-file .env.production -f compose.prod.yaml pull api web db
+          docker compose --env-file .env.production -f compose.prod.yaml pull db
           docker compose --env-file .env.production -f compose.prod.yaml up -d --remove-orphans --no-build
           docker image prune -f
