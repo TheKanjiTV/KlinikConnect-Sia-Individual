@@ -164,4 +164,4 @@ The six `PATIENT_APPOINTMENT_*` variables describe KlinikConnect's side of the c
 
 Authenticated administrators can inspect `GET /api/v1/integrations/status` and read `GET /api/v1/integrations/billing/{resource}`, where `resource` is `customers`, `orders`, or `invoices`. The connector uses the supplied Billing contract's `/api/v1/sales/` paths. Set `BILLING_API_TOKEN` to a Sanctum token issued by Billing. Generated KlinikConnect keys do not replace that token.
 
-The supplied EMR inventory needs its deployed URL and JWT credentials. The supplied Maui Max inventory at `http://13.236.57.159` describes authenticated web pages and AJAX endpoints, so its owner must supply a machine API contract and credentials before automated record exchange can be enabled.
+The supplied EMR inventory needs its deployed URL and JWT credentials. The Laboratory and Pharmacy system owner must supply the correct endpoints, deployed URL, and authentication contract. Configure `LAB_PHARMACY_BASE_URL` and `LAB_PHARMACY_API_TOKEN` once those details are available.

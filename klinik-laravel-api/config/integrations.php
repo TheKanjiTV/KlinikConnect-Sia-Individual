@@ -13,8 +13,8 @@ return [
         'token' => env('BILLING_API_TOKEN'),
     ],
     'emr' => ['base_url' => env('EMR_BASE_URL'), 'token' => env('EMR_API_TOKEN')],
-    'inventory' => [
-        'base_url' => env('MAUI_MAX_BASE_URL', 'http://13.236.57.159'),
-        'token' => env('MAUI_MAX_API_TOKEN'),
+    'laboratory_pharmacy' => [
+        'base_url' => env('LAB_PHARMACY_BASE_URL'),
+        'token' => env('LAB_PHARMACY_API_TOKEN'),
     ],
 ];

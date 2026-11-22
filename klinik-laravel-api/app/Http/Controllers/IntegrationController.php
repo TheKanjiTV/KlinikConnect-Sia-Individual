@@ -99,10 +99,10 @@ class IntegrationController extends Controller
                 'base_url' => config('integrations.emr.base_url'),
                 'configured' => (bool) config('integrations.emr.base_url') && (bool) config('integrations.emr.token'),
             ],
-            'inventory' => [
-                'base_url' => config('integrations.inventory.base_url'),
+            'laboratory_pharmacy' => [
+                'base_url' => config('integrations.laboratory_pharmacy.base_url'),
                 'configured' => false,
-                'required' => 'Documented machine API and credentials; supplied routes use web sessions',
+                'required' => 'Correct Laboratory and Pharmacy endpoints, deployed URL, and credentials',
             ],
             'webhook' => ['mode' => 'signed event inbox', 'applies_business_updates' => false],
         ]);
