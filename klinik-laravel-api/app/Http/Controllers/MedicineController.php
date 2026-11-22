@@ -68,7 +68,7 @@ class MedicineController extends Controller
             $newMedicine = Medicine::create([
                 'name' => $validatedData['medicineName'],
                 'medicine_category' => $validatedData['medicineCategory'],
-                'description' => $validatedData['medicineDescription'],
+                'description' => ($validatedData['medicineDescription'] ?? null),
                 'price' => $validatedData['medicinePrice'],
                 'manufacturing_company' => $validatedData['manufacturingCompany'],
                 'status' => $validatedData['medicineStatus'],
@@ -81,6 +81,8 @@ class MedicineController extends Controller
                 'newMedicine' => $newMedicine,
                 'message' => 'Medicine added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error adding medicine: ', ['error' => $e->getMessage()]);
@@ -156,6 +158,8 @@ class MedicineController extends Controller
                 'last_page' => $medicines->lastPage(),
                 'total' => $medicines->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a response indicating an error occurred
             Log::error('Error fetching medicines: ', ['error' => $e->getMessage()]);
@@ -229,6 +233,8 @@ class MedicineController extends Controller
                 'last_page' => $medicines->lastPage(),
                 'total' => $medicines->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a response indicating an error occurred
             Log::error('Error fetching medicines: ', ['error' => $e->getMessage()]);
@@ -310,6 +316,8 @@ class MedicineController extends Controller
                 'status' => 'error',
                 'message' => 'Medicine not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a generic error response for any other exceptions
             return response()->json([
@@ -396,7 +404,7 @@ class MedicineController extends Controller
             $medicine->update([
                 'name' => $validatedData['medicineName'],
                 'medicine_category' => $validatedData['medicineCategory'],
-                'description' => $validatedData['medicineDescription'],
+                'description' => ($validatedData['medicineDescription'] ?? null),
                 'price' => $validatedData['medicinePrice'],
                 'manufacturing_company' => $validatedData['manufacturingCompany'],
                 'status' => $validatedData['medicineStatus'],
@@ -409,6 +417,8 @@ class MedicineController extends Controller
                 'message' => 'Medicine updated successfully',
                 'updatedMedicine' => $medicine
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error updating medicine: ', ['error' => $e->getMessage()]);
@@ -464,6 +474,8 @@ class MedicineController extends Controller
             return response()->json([
                 'medicines' => $medicines,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a response indicating an error occurred
             Log::error('Error fetching medicines: ', ['error' => $e->getMessage()]);

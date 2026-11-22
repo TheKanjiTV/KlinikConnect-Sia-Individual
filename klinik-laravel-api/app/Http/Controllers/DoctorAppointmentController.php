@@ -106,6 +106,8 @@ class DoctorAppointmentController extends Controller
                 'total' => $appointments->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return error response
             Log::error('Error fetching appointments: ', ['error' => $e->getMessage()]);
@@ -222,6 +224,8 @@ class DoctorAppointmentController extends Controller
                 'current_page' => $appointments->currentPage(),
                 'last_page' => $appointments->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return error response
             Log::error('Error fetching searched appointments: ', ['error' => $e->getMessage()]);
@@ -275,6 +279,7 @@ class DoctorAppointmentController extends Controller
     {
         try {
             // Get the appointment status from the request
+            $request->validate(['paymentStatus' => 'required|in:paid,unpaid,scheduled,completed,canceled']);
             $status = $request->query('paymentStatus');
 
             // Filter appointments based on the provided status
@@ -327,6 +332,8 @@ class DoctorAppointmentController extends Controller
                 'current_page' => $appointments->currentPage(),
                 'last_page' => $appointments->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return error response
             Log::error('Error fetching appointments by status: ', ['error' => $e->getMessage()]);
@@ -396,7 +403,7 @@ class DoctorAppointmentController extends Controller
             $generalStatus = $validatedData['generalStatus'];
 
             // Find the appointment by ID or fail
-            $appointment = Appointment::findOrFail($appointmentId);
+            $appointment = Appointment::where('doctor_id', auth()->user()->doctor?->id)->findOrFail($appointmentId);
 
             // Update the appointment with new status values
             $appointment->update([
@@ -420,6 +427,8 @@ class DoctorAppointmentController extends Controller
             return response()->json([
                 'message' => 'Appointment updated successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a failure response
             Log::error('Error updating appointment: ', ['error' => $e->getMessage()]);
@@ -484,7 +493,7 @@ class DoctorAppointmentController extends Controller
 
         try {
             // Find and delete the appointment by ID
-            $appointment = Appointment::findOrFail($appointmentId);
+            $appointment = Appointment::where('doctor_id', auth()->user()->doctor?->id)->findOrFail($appointmentId);
             $appointment->delete();
 
             // Clear cached counts related to appointments
@@ -510,6 +519,8 @@ class DoctorAppointmentController extends Controller
                 'status' => 'error',
                 'message' => 'Appointment not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a failure response and log the error
             return response()->json([
@@ -555,6 +566,8 @@ class DoctorAppointmentController extends Controller
             return response()->json([
                 'appointments' => $appointments,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a failure response
             Log::error('Error fetching appointments: ', ['error' => $e->getMessage()]);
@@ -640,6 +653,8 @@ class DoctorAppointmentController extends Controller
 
             // Return the counts in a success response
             return response()->json($count, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a failure response if something goes wrong
             Log::error('Error fetching and counting appointments: ', ['error' => $e->getMessage()]);

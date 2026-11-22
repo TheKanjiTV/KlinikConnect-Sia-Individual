@@ -148,3 +148,20 @@ disabled on a public deployment:
 
 For a real deployment, set `RUN_SEEDER=false` and change or remove the demo
 users before exposing the site publicly.
+
+
+## External system integration
+
+The server exposes `GET /api/v1/integrations/health`, `GET /api/v1/integrations/patients`, and `GET /api/v1/integrations/appointments`. Send `X-API-Key` containing `PATIENT_APPOINTMENT_INBOUND_API_KEY`. List endpoints support `page`, `per_page` (1–100), and `updated_since`. Appointments also support `date`.
+
+`POST /api/v1/integrations/webhook` is an authenticated, encrypted event inbox. It acknowledges events without changing clinical, appointment, or payment records. Business mappings must be agreed with each provider before those updates are enabled.
+
+Webhook JSON must contain `event_id`, `event_type`, `source`, and an object or array `data`. Send the inbound API key plus `X-Webhook-Timestamp` (Unix seconds) and `X-Webhook-Signature` (`sha256=` followed by the hexadecimal HMAC-SHA256 of `timestamp + "." + raw request body`, using `PATIENT_APPOINTMENT_WEBHOOK_VERIFY_SECRET`). Timestamps must be within five minutes. Repeating an identical event ID and body returns `duplicate`. Reusing an event ID with a different body returns 409.
+
+KlinikConnect signs outgoing webhooks using `PATIENT_APPOINTMENT_WEBHOOK_SIGNING_SECRET` and sends `PATIENT_APPOINTMENT_OUTBOUND_API_KEY` as `X-API-Key`. The recipient must configure matching values. Set `INTEGRATION_OUTBOUND_WEBHOOK_URL` to the recipient's URL, then run `php artisan integrations:send-webhook /path/to/event.json`. Retry failures with the same event ID. Outbound delivery is an explicit command and does not automatically publish model changes.
+
+The six `PATIENT_APPOINTMENT_*` variables describe KlinikConnect's side of the connection. `PATIENT_APPOINTMENT_WEBHOOK_URL` is this application's incoming URL. Each peer should receive its own credentials before independent production access is enabled.
+
+Authenticated administrators can inspect `GET /api/v1/integrations/status` and read `GET /api/v1/integrations/billing/{resource}`, where `resource` is `customers`, `orders`, or `invoices`. The connector uses the supplied Billing contract's `/api/v1/sales/` paths. Set `BILLING_API_TOKEN` to a Sanctum token issued by Billing. Generated KlinikConnect keys do not replace that token.
+
+The supplied EMR inventory needs its deployed URL and JWT credentials. The supplied Maui Max inventory at `http://13.236.57.159` describes authenticated web pages and AJAX endpoints, so its owner must supply a machine API contract and credentials before automated record exchange can be enabled.

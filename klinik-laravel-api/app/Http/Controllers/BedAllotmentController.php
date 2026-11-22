@@ -83,7 +83,7 @@ class BedAllotmentController extends Controller
                 'bed_number' => $validatedData['bedNumber'],
                 'bed_type' => $validatedData['bedType'],
                 'allotment_time' => $validatedData['allotmentDate'],
-                'discharge_time' => $validatedData['dischargeDate'],
+                'discharge_time' => ($validatedData['dischargeDate'] ?? null),
                 'patient_email' => $validatedData['patientEmail'],
                 'patient_id' => $patient->id,
                 'patient_name' => $patient->name
@@ -94,6 +94,8 @@ class BedAllotmentController extends Controller
                 'newBedAllotment' => $newBedAllotment,
                 'message' => 'Bed allotment added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error adding bed allotment: ', ['error' => $e->getMessage()]);
@@ -165,6 +167,8 @@ class BedAllotmentController extends Controller
                 'last_page' => $bedAllotments->lastPage(),
                 'total' => $bedAllotments->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error fetching bed allotments: ', ['error' => $e->getMessage()]);
@@ -235,6 +239,8 @@ class BedAllotmentController extends Controller
                 'last_page' => $bedAllotments->lastPage(),
                 'total' => $bedAllotments->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error fetching bed allotments: ', ['error' => $e->getMessage()]);
@@ -314,6 +320,8 @@ class BedAllotmentController extends Controller
                 'status' => 'error',
                 'message' => 'Bed allotment not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a 500 error for any other exceptions
             return response()->json([
@@ -405,7 +413,7 @@ class BedAllotmentController extends Controller
                 'bed_number' => $validatedData['bedNumber'],
                 'bed_type' => $validatedData['bedType'],
                 'allotment_time' => $validatedData['allotmentDate'],
-                'discharge_time' => $validatedData['dischargeDate'],
+                'discharge_time' => ($validatedData['dischargeDate'] ?? null),
                 'patient_email' => $validatedData['patientEmail'],
                 'patient_id' => $patient->id,
                 'patient_name' => $patient->name
@@ -415,6 +423,8 @@ class BedAllotmentController extends Controller
                 'message' => 'Bed allotment updated successfully',
                 'updatedBedAllotment' => $bedAllotment
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error updating bed allotment: ', ['error' => $e->getMessage()]);
@@ -456,6 +466,8 @@ class BedAllotmentController extends Controller
             return response()->json([
                 'bedAllotments' => $bedAllotments,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error fetching bed allotments: ', ['error' => $e->getMessage()]);

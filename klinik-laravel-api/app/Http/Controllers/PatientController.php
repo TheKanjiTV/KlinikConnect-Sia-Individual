@@ -170,6 +170,8 @@ class PatientController extends Controller
                 'newPatient' => $patient
             ], 201); // Created
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur
             Log::error('Error adding patient: ', ['error' => $e->getMessage()]);
@@ -259,6 +261,8 @@ class PatientController extends Controller
                 'last_page' => $patients->lastPage(),
                 'total' => $patients->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur
             Log::error('Error fetching patients: ', ['error' => $e->getMessage()]);
@@ -338,6 +342,8 @@ class PatientController extends Controller
                 'total' => $patients->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur
             Log::error('Error fetching patients: ', ['error' => $e->getMessage()]);
@@ -427,6 +433,8 @@ class PatientController extends Controller
                 'status' => 'error',
                 'message' => 'Patient not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Handle any other exceptions
             return response()->json([
@@ -491,6 +499,8 @@ class PatientController extends Controller
             return response()->json([
                 'patients' => $patients,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching patients: ', ['error' => $e->getMessage()]);
@@ -627,6 +637,8 @@ class PatientController extends Controller
                 'appointments' => $appointments,
                 'orders' => $orders
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching patient appointments and orders: ', ['error' => $e->getMessage()]);
@@ -949,6 +961,8 @@ class PatientController extends Controller
                 'total' => $appointments->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching appointments: ', ['error' => $e->getMessage()]);
@@ -1064,6 +1078,8 @@ class PatientController extends Controller
                 'current_page' => $appointments->currentPage(),
                 'last_page' => $appointments->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching searched appointments: ', ['error' => $e->getMessage()]);
@@ -1116,6 +1132,7 @@ class PatientController extends Controller
     {
         try {
             // Retrieve the status parameter from the query string
+            $request->validate(['paymentStatus' => 'required|in:paid,unpaid,scheduled,completed,canceled']);
             $status = $request->query('paymentStatus');
 
             // Determine the appropriate query based on the status value
@@ -1168,6 +1185,8 @@ class PatientController extends Controller
                 'current_page' => $appointments->currentPage(),
                 'last_page' => $appointments->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching appointments by status: ', ['error' => $e->getMessage()]);
@@ -1238,6 +1257,8 @@ class PatientController extends Controller
 
             // Return a successful JSON response with the appointment counts
             return response()->json($count, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching and counting appointments: ', ['error' => $e->getMessage()]);
@@ -1331,6 +1352,8 @@ class PatientController extends Controller
                 'total' => $orders->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching orders: ', ['error' => $e->getMessage()]);
@@ -1401,8 +1424,10 @@ class PatientController extends Controller
             $searchQuery = $request->query('search_query');
 
             // Perform a search on orders based on national card ID or full name
-            $orders = Order::where('national_card_id', 'like', '%' . $searchQuery . '%')
-                ->orWhere('full_name', 'like', '%' . $searchQuery . '%')
+            $orders = Order::where(function ($query) use ($searchQuery) {
+                $query->where('national_card_id', 'like', '%' . $searchQuery . '%')
+                    ->orWhere('full_name', 'like', '%' . $searchQuery . '%');
+            })
                 ->select(
                     'id',
                     'status',
@@ -1426,6 +1451,8 @@ class PatientController extends Controller
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching searched orders: ', ['error' => $e->getMessage()]);
@@ -1492,6 +1519,7 @@ class PatientController extends Controller
     {
         try {
             // Retrieve the status parameter from the query string
+            $request->validate(['paymentStatus' => 'required|in:paid,unpaid']);
             $status = $request->query('paymentStatus');
 
             // Determine the appropriate query based on the status value
@@ -1513,6 +1541,8 @@ class PatientController extends Controller
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching orders by status: ', ['error' => $e->getMessage()]);
@@ -1575,6 +1605,8 @@ class PatientController extends Controller
 
             // Return a successful JSON response with the order counts
             return response()->json($count, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching and counting orders: ', ['error' => $e->getMessage()]);
@@ -1584,5 +1616,10 @@ class PatientController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function getAllOrders()
+    {
+        return response()->json(['orders' => Order::where('user_id', auth()->id())->get()]);
     }
 }

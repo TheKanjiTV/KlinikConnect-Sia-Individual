@@ -86,13 +86,17 @@ class PaymentController extends Controller
         // Validate the request data
         $validatedData = $request->validate([
             'offerId' => 'required|integer|exists:offers,id',
-            'quantity' => 'required|integer',
+            'quantity' => 'required|integer|min:1|max:1000',
             'fullName' => 'required|string|max:255',
             'gender' => 'required|string|max:255',
             'nationalCardID' => 'required|string|max:500'
         ]);
 
         // Find the offer by ID
+        if (!config('services.stripe.secret')) {
+            return response()->json(['message' => 'Stripe payment is not configured.'], 503);
+        }
+
         $offer = Offer::find($validatedData['offerId']);
 
         // Return an error response if the offer is not found
@@ -105,7 +109,7 @@ class PaymentController extends Controller
 
         try {
             // Initialize the Stripe client
-            $stripe = new StripeClient(env('STRIPE_SECRET_KEY'));
+            $stripe = app(StripeClient::class);
 
             // Create a new Stripe Checkout session
             $checkout_session = $stripe->checkout->sessions->create([
@@ -131,7 +135,7 @@ class PaymentController extends Controller
             $order = new Order();
             $order->order_id = $order_id;
             $order->status = 'unpaid';
-            $order->total_price = $offer->total_with_tax;
+            $order->total_price = $offer->total_with_tax * $validatedData['quantity'];
             $order->session_id = $checkout_session->id;
             $order->user_id = Auth::user()->id;
             $order->offer_id = $validatedData['offerId'];
@@ -184,6 +188,8 @@ class PaymentController extends Controller
                 'order_id' => $order_id,
                 'order' => $order
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return an error response if something goes wrong
             return response()->json([
@@ -251,80 +257,6 @@ class PaymentController extends Controller
 
     public function success(Request $request)
     {
-        // Initialize the Stripe client
-        $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET_KEY'));
-        $sessionId = $request->get('sessionId');
-
-        try {
-            // Retrieve the Stripe Checkout session
-            $session = $stripe->checkout->sessions->retrieve($sessionId);
-
-            // Return an error response if the session is not found
-            if (!$session) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Session not found.'
-                ], 404);
-            }
-        } catch (\Throwable $th) {
-            // Return an error response if there's an issue retrieving the session
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error retrieving session.'
-            ], 500);
-        }
-
-        // Find the order associated with the session ID
-        $checkOrder = Order::where('session_id', $session->id)->first();
-
-        // Return an error response if the order is not found
-        if (!$checkOrder) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Order not found.'
-            ], 404);
-        }
-
-        // Update the order status if it is unpaid
-        if ($checkOrder->status === 'paid') {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Payment successful.',
-                'order' => $checkOrder
-            ]);
-        }
-
-        if ($checkOrder->status == 'unpaid') {
-            $checkOrder->status = 'paid';
-            $checkOrder->save();
-        }
-
-        // Send a payment success email to the user
-        $order = Order::where('user_id', Auth::user()->id)
-            ->where('session_id', $session->id)
-            ->first();
-
-        if (auth()->user()) {
-            Mail::to(auth()->user()->email)->send(new OrderPaymentSuccess($order));
-        }
-
-        // Clear the cache for the current user's order count
-        if ($order) {
-            $userId = auth()->user()->id;
-            $cacheKey = "count_orders_patient_{$userId}";
-            if (Cache::has($cacheKey)) {
-                Cache::forget($cacheKey);
-            }
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Payment successful.',
-                'order' => $order
-            ]);
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Order not found for this user.'
-            ], 404);
-        }
+        return app(\App\Services\ConfirmCheckoutPayment::class)->handle($request, 'order');
     }
 }

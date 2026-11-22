@@ -112,6 +112,8 @@ class DeathReportController extends Controller
                 'newDeathReport' => $newDeathReport,
                 'message' => 'Death report added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return a generic error response
             Log::error('Error adding death report: ', ['error' => $e->getMessage()]);
@@ -197,6 +199,8 @@ class DeathReportController extends Controller
                 'last_page' => $deathReports->lastPage(),
                 'total' => $deathReports->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return a generic error response
             Log::error('Error fetching death reports: ', ['error' => $e->getMessage()]);
@@ -278,6 +282,8 @@ class DeathReportController extends Controller
                 'last_page' => $deathReports->lastPage(),
                 'total' => $deathReports->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return a generic error response
             Log::error('Error fetching death reports: ', ['error' => $e->getMessage()]);
@@ -358,6 +364,8 @@ class DeathReportController extends Controller
                 'status' => 'error',
                 'message' => 'Death report not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a generic error response for other exceptions
             return response()->json([
@@ -471,6 +479,8 @@ class DeathReportController extends Controller
                 'message' => 'Death report updated successfully',
                 'updatedDeathReport' => $deathReport
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return a generic error response
             Log::error('Error updating death report: ', ['error' => $e->getMessage()]);
@@ -525,6 +535,8 @@ class DeathReportController extends Controller
             return response()->json([
                 'deathReports' => $deathReports,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return a generic error response
             Log::error('Error fetching death reports: ', ['error' => $e->getMessage()]);

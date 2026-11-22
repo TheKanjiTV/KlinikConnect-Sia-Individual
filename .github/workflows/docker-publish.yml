@@ -16,6 +16,32 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  test:
+    name: Validate Laravel API
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: klinik-laravel-api
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite, mbstring
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan test --compact
+
   build:
     name: Build ${{ matrix.name }} image
     runs-on: ubuntu-latest
@@ -80,7 +106,7 @@ jobs:
 
   deploy:
     name: Deploy to server
-    needs: build
+    needs: [test, build]
     runs-on: [self-hosted, linux, x64, klinikconnect]
     permissions:
       contents: read

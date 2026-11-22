@@ -86,6 +86,8 @@ class OrderController extends Controller
                 'total' => $orders->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error details for debugging
             Log::error('Error fetching orders: ', ['error' => $e->getMessage()]);
@@ -176,6 +178,8 @@ class OrderController extends Controller
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error details for debugging
             Log::error('Error fetching searched orders: ', ['error' => $e->getMessage()]);
@@ -246,6 +250,7 @@ class OrderController extends Controller
     {
         try {
             // Get the order status from the request
+            $request->validate(['status' => 'required|in:paid,unpaid']);
             $status = $request->query('status');
 
             // Retrieve orders based on the status with pagination
@@ -268,6 +273,8 @@ class OrderController extends Controller
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error details for debugging
             Log::error('Error fetching orders by status: ', ['error' => $e->getMessage()]);
@@ -366,6 +373,8 @@ class OrderController extends Controller
             return response()->json([
                 'message' => 'Order updated successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error details for debugging
             Log::error('Error updating order: ', ['error' => $e->getMessage()]);
@@ -462,6 +471,8 @@ class OrderController extends Controller
                 'status' => 'error',
                 'message' => 'Order not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a 500 error response for any other exceptions
             return response()->json([
@@ -518,6 +529,8 @@ class OrderController extends Controller
             return response()->json([
                 'orders' => $orders,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error details for debugging
             Log::error('Error fetching orders: ', ['error' => $e->getMessage()]);
@@ -582,6 +595,8 @@ class OrderController extends Controller
 
             // Return a success response with the order counts
             return response()->json($count, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error details for debugging
             Log::error('Error fetching and counting orders: ', ['error' => $e->getMessage()]);

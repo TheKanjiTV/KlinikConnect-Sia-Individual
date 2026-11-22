@@ -146,6 +146,8 @@ class LaboratoristController extends Controller
                 'newLaboratorist' => $newLaboratorist,
                 'message' => 'Laboratorist created successfully!',
             ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur and return an error response
             Log::error('Error adding laboratorist: ', ['error' => $e->getMessage()]);
@@ -229,6 +231,8 @@ class LaboratoristController extends Controller
                 'last_page' => $laboratorists->lastPage(),
                 'total' => $laboratorists->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur and return an error response
             Log::error('Error fetching laboratorists: ', ['error' => $e->getMessage()]);
@@ -315,6 +319,8 @@ class LaboratoristController extends Controller
                 'total' => $laboratorists->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur and return an error response
             Log::error('Error fetching laboratorists: ', ['error' => $e->getMessage()]);
@@ -399,6 +405,8 @@ class LaboratoristController extends Controller
                 'status' => 'error',
                 'message' => 'Laboratorist not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response for other exceptions
             return response()->json([
@@ -451,6 +459,8 @@ class LaboratoristController extends Controller
             return response()->json([
                 'laboratorists' => $laboratorists,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a response indicating an error occurred
             Log::error('Error fetching laboratorists: ', ['error' => $e->getMessage()]);

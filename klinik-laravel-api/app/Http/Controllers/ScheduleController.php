@@ -83,7 +83,7 @@ class ScheduleController extends Controller
         // Validate the request data to ensure 'startTime' and 'endTime' are provided and in the correct format
         $validatedData = $request->validate([
             'startTime' => 'required|date_format:H:i',
-            'endTime' => 'required|date_format:H:i',
+            'endTime' => 'required|date_format:H:i|after:startTime',
         ]);
 
         try {
@@ -201,6 +201,8 @@ class ScheduleController extends Controller
                     'end_time' => $endTime,
                 ],
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching times: ', ['error' => $e->getMessage()]);
@@ -263,6 +265,9 @@ class ScheduleController extends Controller
         $doctorTimes = StartEndTime::where('doctor_id', $doctor->id)->first();
 
         // Convert start and end times to minutes for easy comparison
+        if (!$doctorTimes) {
+            return response()->json([]);
+        }
         $startTime = $doctorTimes->start_time;
         list($hours, $minutes) = explode(':', $startTime);
         $startTimeInMinutes = ($hours * 60) + $minutes;

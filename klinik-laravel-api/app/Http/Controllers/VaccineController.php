@@ -109,10 +109,10 @@ class VaccineController extends Controller
                 'patient_name' => $patient->name,
                 'nurse_name' => $nurse->name,
                 'vaccine_name' => $validatedData['vaccineName'],
-                'serial_number' => $validatedData['serialNumber'],
+                'serial_number' => ($validatedData['serialNumber'] ?? null),
                 'dose_number' => $validatedData['doseNumber'],
                 'date_given' => $validatedData['dateGiven'],
-                'note' => $validatedData['note'],
+                'note' => ($validatedData['note'] ?? null),
                 'patient_email' => $validatedData['patientEmail'],
                 'nurse_email' => $validatedData['nurseEmail']
             ]);
@@ -122,6 +122,8 @@ class VaccineController extends Controller
                 'newVaccine' => $newVaccine,
                 'message' => 'Vaccine added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error adding vaccine: ', ['error' => $e->getMessage()]);
@@ -215,6 +217,8 @@ class VaccineController extends Controller
                 'last_page' => $vaccines->lastPage(),
                 'total' => $vaccines->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching vaccines: ', ['error' => $e->getMessage()]);
@@ -301,6 +305,8 @@ class VaccineController extends Controller
                 'last_page' => $vaccines->lastPage(),
                 'total' => $vaccines->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching vaccines: ', ['error' => $e->getMessage()]);
@@ -381,6 +387,8 @@ class VaccineController extends Controller
                 'status' => 'error',
                 'message' => 'Vaccine not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a general error response for other exceptions
             return response()->json([
@@ -481,10 +489,10 @@ class VaccineController extends Controller
                 'patient_name' => $patient->name,
                 'nurse_name' => $nurse->name,
                 'vaccine_name' => $validatedData['vaccineName'],
-                'serial_number' => $validatedData['serialNumber'],
+                'serial_number' => ($validatedData['serialNumber'] ?? null),
                 'dose_number' => $validatedData['doseNumber'],
                 'date_given' => $validatedData['dateGiven'],
-                'note' => $validatedData['note'],
+                'note' => ($validatedData['note'] ?? null),
             ]);
 
             // Return a success response with the updated vaccine data
@@ -492,6 +500,8 @@ class VaccineController extends Controller
                 'message' => 'Vaccine updated successfully',
                 'updatedVaccine' => $vaccine
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error updating vaccine: ', ['error' => $e->getMessage()]);
@@ -538,6 +548,8 @@ class VaccineController extends Controller
             return response()->json([
                 'vaccines' => $vaccines,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching vaccines: ', ['error' => $e->getMessage()]);

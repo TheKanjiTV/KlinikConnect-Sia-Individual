@@ -72,6 +72,8 @@ class DepartmentsController extends Controller
                 'newDepartment' => $newDepartment,
                 'message' => 'Department added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return a generic error response
             Log::error('Error adding department: ', ['error' => $e->getMessage()]);
@@ -144,6 +146,8 @@ class DepartmentsController extends Controller
                 'total' => $departments->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return a generic error response
             Log::error('Error fetching departments: ', ['error' => $e->getMessage()]);
@@ -219,6 +223,8 @@ class DepartmentsController extends Controller
                 'current_page' => $departments->currentPage(),
                 'last_page' => $departments->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return a generic error response
             Log::error('Error fetching searched departments: ', ['error' => $e->getMessage()]);
@@ -300,6 +306,8 @@ class DepartmentsController extends Controller
                 'status' => 'error',
                 'message' => 'Department not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return error response for other exceptions
             return response()->json([
@@ -387,6 +395,8 @@ class DepartmentsController extends Controller
             return response()->json([
                 'message' => 'Department updated successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return error response
             Log::error('Error updating department: ', ['error' => $e->getMessage()]);
@@ -444,6 +454,8 @@ class DepartmentsController extends Controller
             return response()->json([
                 'departments' => $departments,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log error and return error response
             Log::error('Error fetching departments: ', ['error' => $e->getMessage()]);

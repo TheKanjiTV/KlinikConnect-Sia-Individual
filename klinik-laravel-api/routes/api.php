@@ -40,6 +40,19 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::prefix('v1/integrations')->group(function () {
+    Route::middleware([\App\Http\Middleware\IntegrationApiKey::class, 'throttle:60,1'])->group(function () {
+        Route::get('/health', [\App\Http\Controllers\IntegrationController::class, 'health']);
+        Route::get('/patients', [\App\Http\Controllers\IntegrationController::class, 'patients']);
+        Route::get('/appointments', [\App\Http\Controllers\IntegrationController::class, 'appointments']);
+        Route::post('/webhook', [\App\Http\Controllers\IntegrationController::class, 'webhook']);
+    });
+    Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+        Route::get('/status', [\App\Http\Controllers\IntegrationController::class, 'status']);
+        Route::get('/billing/{resource}', [\App\Http\Controllers\IntegrationController::class, 'billing']);
+    });
+});
+
 
 Route::prefix('v1')->group(function () use ($router) {
     // Authentication EndPoints
@@ -70,11 +83,11 @@ Route::prefix('v1')->group(function () use ($router) {
         Route::get('/get-user-photo', [UserController::class, 'getUserProfilePhoto']);
         Route::get('/is-user-admin', [UserController::class, 'isUserAdmin']);
     });
-    Route::get('/fetch-user-role', [UserController::class, 'getUserRole']);
+    Route::get('/fetch-user-role', [UserController::class, 'getUserRole'])->middleware('auth:sanctum');
 
 
 
-    Route::middleware('admin')->group(function () {
+    Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('/fetch-users', [UsersController::class, 'getUsers']);
         Route::get('/fetch-searched-users', [UsersController::class, 'getSearchedUsers']);
         Route::get('/fetch-users-by-role', [UsersController::class, 'getUsersByRoles']);
@@ -85,7 +98,7 @@ Route::prefix('v1')->group(function () use ($router) {
     });
 
 
-    Route::middleware('admin_doctor')->group(function () {
+    Route::middleware(['auth:sanctum', 'admin_doctor'])->group(function () {
 
         // doctors endpoints
         Route::get('/fetch-doctors', [DoctorController::class, 'getDoctors']);
@@ -125,7 +138,7 @@ Route::prefix('v1')->group(function () use ($router) {
     });
 
 
-    Route::middleware('admin_nurse')->group(function () {
+    Route::middleware(['auth:sanctum', 'admin_nurse'])->group(function () {
 
 
         // blood bank endpoints
@@ -203,7 +216,7 @@ Route::prefix('v1')->group(function () use ($router) {
 
     });
 
-    Route::middleware('admin_doctor_nurse')->group(function () {
+    Route::middleware(['auth:sanctum', 'admin_doctor_nurse'])->group(function () {
         // bed allotment endpoints
 
         Route::post('/add-bed-allotment', [BedAllotmentController::class, 'addBedAllotment']);
@@ -218,7 +231,7 @@ Route::prefix('v1')->group(function () use ($router) {
 
 
 
-    Route::middleware('admin_nurse_pharmacist')->group(function () {
+    Route::middleware(['auth:sanctum', 'admin_nurse_pharmacist'])->group(function () {
         // medicine endpoints
 
         Route::post('/add-medicine', [MedicineController::class, 'addMedicine']);
@@ -231,10 +244,10 @@ Route::prefix('v1')->group(function () use ($router) {
         //end bed allotment endpoints
     });
 
-    Route::middleware('pharmacist')->group(function () {
+    Route::middleware(['auth:sanctum', 'pharmacist'])->group(function () {
         Route::get('/pharmacist-dashboard-data', [PharmacistController::class, 'getAllPharmacistDashboardData']);
     });
-    Route::middleware('patient')->group(function () {
+    Route::middleware(['auth:sanctum', 'patient'])->group(function () {
         Route::get('/patient-dashboard-data', [PatientController::class, 'getPatientDashboardData']);
         Route::get('/fetch-patient-appointments', [PatientController::class, 'getPatientAppointments']);
         Route::get('/fetch-searched-patient-appointments', [PatientController::class, 'getSearchedPatientAppointments']);
@@ -249,7 +262,7 @@ Route::prefix('v1')->group(function () use ($router) {
         Route::get('/fetch-all-patient-orders', [PatientController::class, 'getAllOrders']);
         Route::get('/count-patient-orders', [PatientController::class, 'countOrders']);
     });
-    Route::middleware('admin')->group(function () {
+    Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         // departments endpoints
         Route::post('/add-department', [DepartmentsController::class, 'addDepartment']);
         Route::get('/fetch-departments', [DepartmentsController::class, 'getDepartments']);
@@ -358,12 +371,12 @@ Route::prefix('v1')->group(function () use ($router) {
 
 
     //Order Checkout endpoints 
-    Route::post('/order-checkout', [PaymentController::class, 'orderCheckout']);
-    Route::post('/order-success-payment', [PaymentController::class, 'success']);
+    Route::post('/order-checkout', [PaymentController::class, 'orderCheckout'])->middleware('auth:sanctum');
+    Route::post('/order-success-payment', [PaymentController::class, 'success'])->middleware('auth:sanctum');
     //end Order Checkout endpoints
 
 
-    Route::middleware(['doctor'])->group(function () {
+    Route::middleware(['auth:sanctum', 'doctor'])->group(function () {
 
 
         // doctor schedules endpoints
@@ -400,7 +413,7 @@ Route::prefix('v1')->group(function () use ($router) {
     });
 
 
-    Route::middleware(['nurse'])->group(function () {
+    Route::middleware(['auth:sanctum', 'nurse'])->group(function () {
         Route::get('/nurse-dashboard-data', [NurseController::class, 'getAllNurseDashboardData']);
     });
 
@@ -408,9 +421,9 @@ Route::prefix('v1')->group(function () use ($router) {
     // appointment reservasion endpoints
     Route::get('/appointments-fetch-departments', [AppointmentReservation::class, 'getDepartments']);
     Route::post('/appointments-fetch-doctors', [AppointmentReservation::class, 'getDoctors']);
-    Route::post('/appointments-search-availability', [AppointmentReservation::class, 'searchAvailability']);
-    Route::post('/appointments-register-appointment', [AppointmentReservation::class, 'registerAppointment']);
-    Route::post('/appointment-success-payment', [AppointmentReservation::class, 'success']);
+    Route::post('/appointments-search-availability', [AppointmentReservation::class, 'searchAvailability'])->middleware('auth:sanctum');
+    Route::post('/appointments-register-appointment', [AppointmentReservation::class, 'registerAppointment'])->middleware('auth:sanctum');
+    Route::post('/appointment-success-payment', [AppointmentReservation::class, 'success'])->middleware('auth:sanctum');
     // end appointment reservasion endpoints
 
 
@@ -433,7 +446,7 @@ Route::prefix('v1')->group(function () use ($router) {
 
     // Route::get('/users/{limit}/{skip}', [UsersController::class, 'index']);
     Route::get('/check-user-auth', [UserController::class, 'checkAuth']);
-    Route::get('/get-user-data', [UserController::class, 'getUserData']);
+    Route::get('/get-user-data', [UserController::class, 'getUserData'])->middleware('auth:sanctum');
 
     Route::get('/sse', [SseController::class, 'streamNotifications']);
 

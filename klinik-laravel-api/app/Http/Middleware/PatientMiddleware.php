@@ -20,7 +20,7 @@ class PatientMiddleware
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        if (!$user->is_admin || !$user->is_doctor || !$user->is_nurse || !$user->is_pharmacist || !$user->is_laboratorists) {
+        if (!$user->is_admin && !$user->is_doctor && !$user->is_nurse && !$user->is_pharmacist && !$user->is_laboratorist) {
            return $next($request); 
         }
         return response()->json(['message' => 'Unauthorized'], 401);

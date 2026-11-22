@@ -86,6 +86,8 @@ class BloodDonorController extends Controller
                 'newBloodDonor' => $newBloodDonor,
                 'message' => 'Blood donor added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception occurs
             Log::error('Error adding blood donor: ', ['error' => $e->getMessage()]);
@@ -161,6 +163,8 @@ class BloodDonorController extends Controller
                 'last_page' => $bloodDonors->lastPage(),
                 'total' => $bloodDonors->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception occurs
             Log::error('Error fetching blood donors: ', ['error' => $e->getMessage()]);
@@ -232,6 +236,8 @@ class BloodDonorController extends Controller
                 'last_page' => $bloodDonors->lastPage(),
                 'total' => $bloodDonors->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception occurs
             Log::error('Error fetching blood donors: ', ['error' => $e->getMessage()]);
@@ -317,6 +323,8 @@ class BloodDonorController extends Controller
                 'status' => 'error',
                 'message' => 'Blood donor not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a generic error response if an unexpected error occurs
             return response()->json([
@@ -408,6 +416,8 @@ class BloodDonorController extends Controller
             return response()->json([
                 'message' => 'Blood donor updated successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception occurs
             Log::error('Error updating blood donor: ', ['error' => $e->getMessage()]);
@@ -453,6 +463,8 @@ class BloodDonorController extends Controller
             return response()->json([
                 'bloodDonors' => $bloodDonors,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception occurs
             Log::error('Error fetching blood donors: ', ['error' => $e->getMessage()]);

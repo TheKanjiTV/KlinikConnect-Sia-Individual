@@ -58,6 +58,8 @@ class AppointmentReservation extends Controller
                 'data' => $departments,
                 'message' => 'Departments retrieved successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Handle exceptions by returning a JSON response with an error message
             return response()->json([
@@ -116,6 +118,8 @@ class AppointmentReservation extends Controller
                 'data' => $doctors,
                 'message' => 'Doctors retrieved successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Handle exceptions by returning a JSON response with an error message
             return response()->json([
@@ -257,6 +261,8 @@ class AppointmentReservation extends Controller
             return response()->json([
                 'message' => $e->getMessage(),
             ], 422);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Handle general exceptions
             return response()->json([
@@ -315,112 +321,79 @@ class AppointmentReservation extends Controller
      */
     public function registerAppointment(Request $request)
     {
-        try {
-            // Validate the request data
-            $validatedData = $request->validate([
-                'day' => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-                'doctor' => 'required|integer|exists:doctors,id',
-                'startTime' => 'required',
-                'date' => 'required|date',
-            ]);
+        $validatedData = $request->validate([
+            'day' => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'doctor' => 'required|integer|exists:doctors,id',
+            'startTime' => 'required|date_format:H:i,H:i:s',
+            'date' => 'required|date|after_or_equal:today',
+        ]);
+        $date = Carbon::parse($validatedData['date'])->format('Y-m-d');
+        $startTime = Carbon::parse($validatedData['startTime'])->format('H:i:s');
+        if (Carbon::parse($date)->format('l') !== $validatedData['day'] || Carbon::parse($date.' '.$startTime)->isPast()) {
+            return response()->json(['message' => 'Select a future time and its matching day.'], 422);
+        }
+        if (!config('services.stripe.secret')) {
+            return response()->json(['message' => 'Stripe payment is not configured.'], 503);
+        }
 
-            // Find the selected doctor's time slot
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($validatedData, $date, $startTime) {
             $selectedTime = DoctorTime::where('doctor_id', $validatedData['doctor'])
-                ->where('day', $validatedData['day'])
-                ->where('start_time', $validatedData['startTime'])
-                ->first();
-
-            // If no matching time slot is found, return a 404 error
+                ->where('day', $validatedData['day'])->where('start_time', $startTime)
+                ->lockForUpdate()->first();
             if (!$selectedTime) {
-                return response()->json([
-                    'message' => 'Doctor time slot not found',
-                ], 404);
+                return response()->json(['message' => 'Doctor time slot not found'], 404);
+            }
+            $dates = $selectedTime->date ?? [];
+            $alreadyBooked = Appointment::where('doctor_id', $selectedTime->doctor_id)
+                ->where('date', $date)->where('start_time', $startTime)
+                ->where('general_status', '!=', 'canceled')->exists();
+            if (in_array($date, $dates, true) || $alreadyBooked) {
+                return response()->json(['message' => 'This appointment time is already reserved.'], 409);
             }
 
-            // Add the selected date to the doctor's time slot
-            $existingDates = $selectedTime->date ?? [];
-            $existingDates[] = $validatedData['date'];
-            $selectedTime->date = $existingDates;
-            $selectedTime->save();
-
-            // Prepare data for the appointment
-            $price = $selectedTime->doctor->appointment_price;
-            $doctorId = $validatedData['doctor'];
-            $startAt = $validatedData['startTime'];
-            $endAt = $selectedTime->end_time;
-            $day = $validatedData['day'];
-
-            // Create a Stripe checkout session
-            $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET_KEY'));
-            $checkoutSession = $stripe->checkout->sessions->create([
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'usd',
-                        'product_data' => [
-                            'name' => 'Appointment Reservation',
+            $stripe = app(\Stripe\StripeClient::class);
+            try {
+                $checkoutSession = $stripe->checkout->sessions->create([
+                    'line_items' => [[
+                        'price_data' => [
+                            'currency' => 'usd',
+                            'product_data' => ['name' => 'Appointment Reservation'],
+                            'unit_amount' => (int) round($selectedTime->doctor->appointment_price * 100),
                         ],
-                        'unit_amount' => $price * 100,
-                    ],
-                    'quantity' => 1,
-                ]],
-                'mode' => 'payment',
-                'success_url' => config('app.frontend_url') . '/appointment-checkout/success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => config('app.frontend_url') . '/appointment-checkout/cancel',
-            ]);
-
-            // Generate a unique order ID
-            $orderId = uniqid() . mt_rand(100000, 999999);
-
-            // Create a new appointment record
-            $appointment = new Appointment();
-            $appointment->order_id = $orderId;
-            $appointment->payment_status = 'unpaid';
-            $appointment->general_status = 'pending';
-            $appointment->doctor_id = $doctorId;
-            $appointment->day = $day;
-            $appointment->start_time = $startAt;
-            $appointment->end_time = $endAt;
-            $appointment->session_id = $checkoutSession->id;
-            $appointment->user_id = Auth::user()->id;
-            $appointment->email = Auth::user()->email;
-            $appointment->date = $validatedData['date'];
-            $appointment->save();
-
-            // Create an appointment notification
-            AppointmentNotification::create([
-                'doctor_id' => $appointment->doctor_id,
-            ]);
-
-            // Clear cached appointment counts
-            $appointmentsCacheKey = 'count_appointments';
-            if (Cache::has($appointmentsCacheKey)) {
-                Cache::forget($appointmentsCacheKey);
+                        'quantity' => 1,
+                    ]],
+                    'mode' => 'payment',
+                    'success_url' => config('app.frontend_url').'/appointment-checkout/success?session_id={CHECKOUT_SESSION_ID}',
+                    'cancel_url' => config('app.frontend_url').'/appointment-checkout/cancel',
+                ], [
+                    'idempotency_key' => hash('sha256', implode('|', [auth()->id(), $selectedTime->id, $date, $selectedTime->updated_at])),
+                ]);
+            } catch (\Throwable $e) {
+                report($e);
+                return response()->json(['message' => 'Unable to create Stripe checkout.'], 502);
             }
 
-            // Clear cached doctor appointments counts
-            $doctorCacheKey = "count_doctor_" . Auth::user()->id . "_appointments";
-            if (Cache::has($doctorCacheKey)) {
-                Cache::forget($doctorCacheKey);
-            }
+            $appointment = Appointment::create([
+                'order_id' => (string) \Illuminate\Support\Str::uuid(),
+                'payment_status' => 'unpaid', 'general_status' => 'pending',
+                'doctor_id' => $selectedTime->doctor_id, 'day' => $validatedData['day'],
+                'start_time' => $startTime, 'end_time' => $selectedTime->end_time,
+                'session_id' => $checkoutSession->id, 'user_id' => auth()->id(),
+                'email' => auth()->user()->email, 'date' => $date,
+            ]);
+            $dates[] = $date;
+            $selectedTime->update(['date' => $dates]);
+            AppointmentNotification::create(['doctor_id' => $appointment->doctor_id]);
+            Cache::forget('count_appointments');
+            Cache::forget('count_patient_'.auth()->id().'_appointments');
+            Cache::forget('count_doctor_'.$selectedTime->doctor->user_id.'_appointments');
 
-            // Return a successful response with the checkout URL
             return response()->json([
                 'message' => 'Appointment registered successfully',
-                'checkout_url' => $checkoutSession->url,
-                'appointment_id' => $appointment->id
-            ], 200);
-        } catch (\Exception $e) {
-            // Handle errors and return a JSON response with the error message
-            return response()->json([
-                'message' => 'Failed to register appointment',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+                'checkout_url' => $checkoutSession->url, 'appointment_id' => $appointment->id,
+            ]);
+        });
     }
-
-
-
-
 
     /**
      * @OA\Post(
@@ -464,82 +437,6 @@ class AppointmentReservation extends Controller
      */
     public function success(Request $request)
     {
-        $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET_KEY'));
-        $sessionId = $request->get('sessionId');
-
-        try {
-            // Retrieve the Stripe session
-            $session = $stripe->checkout->sessions->retrieve($sessionId);
-
-            if (!$session) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Session not found.'
-                ], 404);
-            }
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error retrieving session.'
-            ], 500);
-        }
-
-        // Find the appointment associated with the session
-        $checkAppointment = Appointment::where('session_id', $session->id)->first();
-
-        if (!$checkAppointment) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Order not found.'
-            ], 404);
-        }
-
-        // Update the appointment status if it’s unpaid
-        if ($checkAppointment->payment_status === 'paid') {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Payment successful.',
-                'appointment' => $checkAppointment
-            ]);
-        }
-
-        if ($checkAppointment->payment_status === 'unpaid') {
-            $checkAppointment->payment_status = 'paid';
-            $checkAppointment->general_status = 'scheduled';
-            $checkAppointment->save();
-        }
-
-        // Send an email notification about the successful appointment
-        $appointment = Appointment::where('user_id', Auth::user()->id)
-            ->where('session_id', $session->id)
-            ->first();
-
-        // Clear cached appointment counts
-        $appointmentsCacheKey = 'count_appointments';
-        if (Cache::has($appointmentsCacheKey)) {
-            Cache::forget($appointmentsCacheKey);
-        }
-
-        // Clear cached doctor appointments counts
-        $doctorAppointmentsCacheKey = 'count_doctor_appointments';
-        if (Cache::has($doctorAppointmentsCacheKey)) {
-            Cache::forget($doctorAppointmentsCacheKey);
-        }
-        // Send Success reservasion email
-        Mail::to(Auth::user()->email)->send(new AppointmentReservasionSuccess($appointment));
-
-        // Return a response based on the appointment status
-        if ($appointment) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Payment successful.',
-                'appointment' => $appointment
-            ]);
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Order not found for this user.'
-            ], 404);
-        }
+        return app(\App\Services\ConfirmCheckoutPayment::class)->handle($request, 'appointment');
     }
 }

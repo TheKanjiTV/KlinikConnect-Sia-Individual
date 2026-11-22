@@ -82,6 +82,8 @@ class OurOffersController extends Controller
             return response()->json([
                 'data' => $offers, // The offers data
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur
             Log::error('Error fetching offers: ', ['error' => $e->getMessage()]);

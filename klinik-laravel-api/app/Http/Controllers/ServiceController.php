@@ -68,7 +68,7 @@ class ServiceController extends Controller
             $newService = Service::create([
                 'title' => $validatedData['serviceTitle'],
                 'price' => $validatedData['servicePrice'],
-                'description' => $validatedData['serviceDescription'],
+                'description' => ($validatedData['serviceDescription'] ?? null),
                 'status' => $validatedData['serviceStatus'],
             ]);
 
@@ -77,6 +77,8 @@ class ServiceController extends Controller
                 'newService' => $newService,
                 'message' => 'Service added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the exception message and return a JSON response with an error message
             Log::error('Error adding service: ', ['error' => $e->getMessage()]);
@@ -148,6 +150,8 @@ class ServiceController extends Controller
                 'last_page' => $services->lastPage(),
                 'total' => $services->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the exception message and return a JSON response with an error message
             Log::error('Error fetching services: ', ['error' => $e->getMessage()]);
@@ -218,6 +222,8 @@ class ServiceController extends Controller
                 'last_page' => $services->lastPage(),
                 'total' => $services->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the exception message and return a JSON response with an error message
             Log::error('Error fetching services: ', ['error' => $e->getMessage()]);
@@ -295,6 +301,8 @@ class ServiceController extends Controller
                 'status' => 'error',
                 'message' => 'Service not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the exception and return a JSON response with an error message
             return response()->json([
@@ -376,7 +384,7 @@ class ServiceController extends Controller
             $service->update([
                 'title' => $validatedData['serviceTitle'],
                 'price' => $validatedData['servicePrice'],
-                'description' => $validatedData['serviceDescription'],
+                'description' => ($validatedData['serviceDescription'] ?? null),
                 'status' => $validatedData['serviceStatus'],
             ]);
 
@@ -385,6 +393,8 @@ class ServiceController extends Controller
                 'message' => 'Service updated successfully',
                 'updatedService' => $service,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the exception and return a JSON response with an error message
             Log::error('Error updating service: ', ['error' => $e->getMessage()]);
@@ -427,6 +437,8 @@ class ServiceController extends Controller
             return response()->json([
                 'services' => $services,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the exception and return a JSON response with an error message
             Log::error('Error fetching services: ', ['error' => $e->getMessage()]);

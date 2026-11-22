@@ -19,6 +19,7 @@ class Appointment extends Model
         'end_time',
         'description',
         'status',
+        'payment_status',
         'order_id',
         'session_id',
         'user_id',

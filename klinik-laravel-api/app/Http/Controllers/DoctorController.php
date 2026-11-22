@@ -179,6 +179,8 @@ class DoctorController extends Controller
                 'newDoctor' => $newDoctor,
                 'message' => 'Doctor created successfully!',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a failure response
             Log::error('Error adding doctor: ', ['error' => $e->getMessage()]);
@@ -268,6 +270,8 @@ class DoctorController extends Controller
                 'last_page' => $doctors->lastPage(),
                 'total' => $doctors->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a failure response
             Log::error('Error fetching doctors: ', ['error' => $e->getMessage()]);
@@ -349,6 +353,8 @@ class DoctorController extends Controller
                 'total' => $doctors->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a failure response
             Log::error('Error fetching doctors: ', ['error' => $e->getMessage()]);
@@ -400,6 +406,8 @@ class DoctorController extends Controller
             return response()->json([
                 'departments' => $departments,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur during the fetch operation
             Log::error('Error fetching departments: ', ['error' => $e->getMessage()]);
@@ -481,6 +489,8 @@ class DoctorController extends Controller
                 'status' => 'error',
                 'message' => 'Doctor not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return an error response if any other exception occurs
             return response()->json([
@@ -526,6 +536,8 @@ class DoctorController extends Controller
             return response()->json([
                 'doctors' => $doctors,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log any errors that occur during the fetch operation
             Log::error('Error fetching doctors: ', ['error' => $e->getMessage()]);

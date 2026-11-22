@@ -64,10 +64,16 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $request->session()->regenerate();
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
 
         $user = Auth::user();
         $token = $user->createToken('token')->plainTextToken;
+
+        if (!$request->is('api/*')) {
+            return response()->noContent();
+        }
 
         return response()->json([
             'token' => $token,
@@ -110,11 +116,16 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): Response
     {
+        $token = $request->user()?->currentAccessToken();
         Auth::guard('web')->logout();
+        if ($token instanceof \Laravel\Sanctum\PersonalAccessToken) {
+            $token->delete();
+        }
 
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->noContent();
     }

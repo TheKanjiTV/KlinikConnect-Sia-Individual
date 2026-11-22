@@ -110,6 +110,8 @@ class BirthReportController extends Controller
                 'newBirthReport' => $newBirthReport,
                 'message' => 'Birth report added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error adding birth report: ', ['error' => $e->getMessage()]);
@@ -193,6 +195,8 @@ class BirthReportController extends Controller
                 'last_page' => $birthReports->lastPage(),
                 'total' => $birthReports->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error fetching birth reports: ', ['error' => $e->getMessage()]);
@@ -272,6 +276,8 @@ class BirthReportController extends Controller
                 'last_page' => $birthReports->lastPage(),
                 'total' => $birthReports->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error fetching birth reports: ', ['error' => $e->getMessage()]);
@@ -353,6 +359,8 @@ class BirthReportController extends Controller
                 'status' => 'error',
                 'message' => 'Birth report not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a generic error response for any other exceptions
             return response()->json([
@@ -471,6 +479,8 @@ class BirthReportController extends Controller
                 'message' => 'Birth report updated successfully',
                 'updatedBirthReport' => $birthReport
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error updating birth report: ', ['error' => $e->getMessage()]);
@@ -527,6 +537,8 @@ class BirthReportController extends Controller
             return response()->json([
                 'birthReports' => $birthReports,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a JSON response with the error message
             Log::error('Error fetching birth reports: ', ['error' => $e->getMessage()]);

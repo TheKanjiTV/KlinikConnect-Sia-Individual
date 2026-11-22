@@ -138,6 +138,8 @@ class AppointmentController extends Controller
                 'total' => $appointments->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error message
             Log::error('Error fetching appointments: ', ['error' => $e->getMessage()]);
@@ -272,6 +274,8 @@ class AppointmentController extends Controller
                 'current_page' => $appointments->currentPage(),
                 'last_page' => $appointments->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error message
             Log::error('Error fetching searched appointments: ', ['error' => $e->getMessage()]);
@@ -355,6 +359,7 @@ class AppointmentController extends Controller
     {
         try {
             // Get the 'paymentStatus' query parameter from the request
+            $request->validate(['paymentStatus' => 'required|in:paid,unpaid,scheduled,completed,canceled']);
             $status = $request->query('paymentStatus');
 
             // Determine which appointments to fetch based on the status
@@ -402,6 +407,8 @@ class AppointmentController extends Controller
                 'current_page' => $appointments->currentPage(),
                 'last_page' => $appointments->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error message
             Log::error('Error fetching appointments by status: ', ['error' => $e->getMessage()]);
@@ -468,7 +475,7 @@ class AppointmentController extends Controller
             $validatedData = $request->validate([
                 'appointmentId' => 'required|integer|exists:appointments,id', // Ensure appointmentId exists in the appointments table
                 'paymentStatus' => 'required|string|max:255|in:paid,unpaid', // Validate paymentStatus is either 'paid' or 'unpaid'
-                'generalStatus' => 'required|string|max:255|in:completed,pending,canceled', // Validate generalStatus is one of the specified values
+                'generalStatus' => 'required|string|max:255|in:scheduled,completed,pending,canceled', // Validate generalStatus is one of the specified values
             ]);
 
             // Extract validated data
@@ -477,7 +484,11 @@ class AppointmentController extends Controller
             $generalStatus = $validatedData['generalStatus'];
 
             // Find the appointment or fail if not found
-            $appointment = Appointment::findOrFail($appointmentId);
+            $query = Appointment::query();
+            if (!auth()->user()->is_admin) {
+                $query->where('doctor_id', auth()->user()->doctor?->id);
+            }
+            $appointment = $query->findOrFail($appointmentId);
 
             // Update the appointment with new statuses
             $appointment->update([
@@ -508,6 +519,8 @@ class AppointmentController extends Controller
             return response()->json([
                 'message' => 'Appointment updated successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error message
             Log::error('Error updating appointment: ', ['error' => $e->getMessage()]);
@@ -578,7 +591,11 @@ class AppointmentController extends Controller
 
         try {
             // Find the appointment or fail if not found
-            $appointment = Appointment::findOrFail($appointmentId);
+            $query = Appointment::query();
+            if (!auth()->user()->is_admin) {
+                $query->where('doctor_id', auth()->user()->doctor?->id);
+            }
+            $appointment = $query->findOrFail($appointmentId);
 
             // Delete the appointment
             $appointment->delete();
@@ -611,6 +628,8 @@ class AppointmentController extends Controller
                 'status' => 'error',
                 'message' => 'Appointment not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a general error response
             return response()->json([
@@ -684,6 +703,8 @@ class AppointmentController extends Controller
             return response()->json([
                 'appointments' => $appointments,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error message
             Log::error('Error fetching appointments: ', ['error' => $e->getMessage()]);
@@ -755,6 +776,8 @@ class AppointmentController extends Controller
 
             // Return the count data as a JSON response
             return response()->json($count, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error message if an exception occurs
             Log::error('Error fetching and counting appointments: ', ['error' => $e->getMessage()]);
@@ -897,9 +920,11 @@ class AppointmentController extends Controller
             return response()->json([
                 'success' => true,
                 'events' => $events,
-                'start_time' => $doctorTime->start_time,
-                'end_time' => $doctorTime->end_time
+                'start_time' => $doctorTime?->start_time,
+                'end_time' => $doctorTime?->end_time
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error message if an exception occurs
             Log::error('Error fetching events: ', ['error' => $e->getMessage()]);
@@ -965,8 +990,7 @@ class AppointmentController extends Controller
 
             // Fetch appointments for the authenticated doctor with statuses 'scheduled' or 'completed'
             $appointments = Appointment::where('doctor_id', auth()->user()->doctor->id)
-                ->where('general_status', 'scheduled')
-                ->orWhere('general_status', 'completed')
+                ->whereIn('general_status', ['scheduled', 'completed'])
                 ->get();
 
             $generalProfit = 0;
@@ -1012,6 +1036,8 @@ class AppointmentController extends Controller
                 'generalProfit' => $generalProfit,
                 'patientsByMonths' => $patientsMonths
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error message if an exception occurs
             Log::error('Error fetching appointments: ', ['error' => $e->getMessage()]);
@@ -1119,6 +1145,8 @@ class AppointmentController extends Controller
                 'upcomingAppointments' => $upcomingAppointments,
                 'bestPayingPatients' => $patients
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return an error response if an exception occurs
             return response()->json([
@@ -1309,6 +1337,8 @@ class AppointmentController extends Controller
                 'orders' => $ordersByMonths,
                 'ordersGeneralProfit' => $ordersGeneralProfit
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error message if an exception occurs
             Log::error('Error fetching appointments and orders stats: ', ['error' => $e->getMessage()]);
@@ -1320,5 +1350,10 @@ class AppointmentController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function changeAppointmentStatus(Request $request)
+    {
+        return $this->updateAppointment($request);
     }
 }

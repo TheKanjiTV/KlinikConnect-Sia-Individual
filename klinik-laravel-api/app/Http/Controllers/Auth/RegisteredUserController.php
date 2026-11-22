@@ -89,6 +89,10 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         $token = $user->createToken('token')->plainTextToken;
 
+        if (!$request->is('api/*')) {
+            return response()->noContent();
+        }
+
         return response()->json([
             'token' => $token,
             'status' => 'Registered successfully'

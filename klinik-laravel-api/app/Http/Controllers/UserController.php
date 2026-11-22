@@ -279,6 +279,8 @@ class UserController extends Controller
                 'status' => 'error',
                 'message' => 'User not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a generic error response if an exception occurs
             return response()->json([
@@ -363,6 +365,8 @@ class UserController extends Controller
                 'status' => 'error',
                 'message' => 'User not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a generic error response if an exception occurs
             return response()->json([

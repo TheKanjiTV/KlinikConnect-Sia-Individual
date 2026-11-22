@@ -153,6 +153,8 @@ class PharmacistController extends Controller
                 'newPharmacist' => $newPharmacist,
                 'message' => 'Pharmacist created successfully!',
             ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error adding pharmacist: ', ['error' => $e->getMessage()]);
@@ -231,6 +233,8 @@ class PharmacistController extends Controller
                 'last_page' => $pharmacists->lastPage(),
                 'total' => $pharmacists->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching pharmacists: ', ['error' => $e->getMessage()]);
@@ -312,6 +316,8 @@ class PharmacistController extends Controller
                 'total' => $pharmacists->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching pharmacists: ', ['error' => $e->getMessage()]);
@@ -390,6 +396,8 @@ class PharmacistController extends Controller
                 'status' => 'error',
                 'message' => 'Pharmacist not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return an error response if an exception occurs
             return response()->json([
@@ -443,6 +451,8 @@ class PharmacistController extends Controller
             return response()->json([
                 'pharmacists' => $pharmacists,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching pharmacists: ', ['error' => $e->getMessage()]);
@@ -524,6 +534,8 @@ class PharmacistController extends Controller
                     'antitussive' => $antitussive,
                 ],
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching pharmacist dashboard data: ', ['error' => $e->getMessage()]);

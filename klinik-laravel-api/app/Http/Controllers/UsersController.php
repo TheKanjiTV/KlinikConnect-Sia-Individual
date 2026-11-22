@@ -92,6 +92,8 @@ class UsersController extends Controller
                 'total' => $users->total(),
                 'per_page' => $perPage
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching users: ', ['error' => $e->getMessage()]);
@@ -175,6 +177,8 @@ class UsersController extends Controller
                 'current_page' => $users->currentPage(),
                 'last_page' => $users->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching users: ', ['error' => $e->getMessage()]);
@@ -242,6 +246,7 @@ class UsersController extends Controller
     {
         try {
             // Retrieve the role from query parameters
+            $request->validate(['role' => 'required|in:admin,doctor,nurse,pharmacist,laboratorist,patient,all']);
             $role = $request->query('role');
 
             // Fetch users based on role with pagination
@@ -274,6 +279,8 @@ class UsersController extends Controller
                 'current_page' => $users->currentPage(),
                 'last_page' => $users->lastPage()
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching users: ', ['error' => $e->getMessage()]);
@@ -336,6 +343,8 @@ class UsersController extends Controller
             return response()->json([
                 'users' => $users,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching users: ', ['error' => $e->getMessage()]);
@@ -410,6 +419,8 @@ class UsersController extends Controller
 
             // Return the cached user counts in JSON format
             return response()->json($count, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return an error response
             Log::error('Error fetching and counting users: ', ['error' => $e->getMessage()]);

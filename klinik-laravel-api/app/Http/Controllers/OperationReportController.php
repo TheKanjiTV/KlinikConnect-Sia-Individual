@@ -115,6 +115,8 @@ class OperationReportController extends Controller
                 'newOperationReport' => $newOperationReport,
                 'message' => 'Operation report added successfully',
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error adding operation report: ', ['error' => $e->getMessage()]);
@@ -192,6 +194,8 @@ class OperationReportController extends Controller
                 'last_page' => $operationReports->lastPage(), // Last page number
                 'total' => $operationReports->total(), // Total number of reports
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error fetching operation reports: ', ['error' => $e->getMessage()]);
@@ -265,6 +269,8 @@ class OperationReportController extends Controller
                 'last_page' => $operationReports->lastPage(), // Last page number
                 'total' => $operationReports->total(), // Total number of reports
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error fetching operation reports: ', ['error' => $e->getMessage()]);
@@ -346,6 +352,8 @@ class OperationReportController extends Controller
                 'status' => 'error',
                 'message' => 'Operation report not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a 500 response for any other errors
             return response()->json([
@@ -459,6 +467,8 @@ class OperationReportController extends Controller
                 'message' => 'Operation report updated successfully',
                 'updatedOperationReport' => $operationReport
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a 500 response for any exceptions
             Log::error('Error updating operation report: ', ['error' => $e->getMessage()]);
@@ -511,6 +521,8 @@ class OperationReportController extends Controller
             return response()->json([
                 'departments' => $departments,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a 500 response for any exceptions
             Log::error('Error fetching departments: ', ['error' => $e->getMessage()]);
@@ -558,6 +570,8 @@ class OperationReportController extends Controller
             return response()->json([
                 'operationReports' => $operationReports,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error details for debugging
             Log::error('Error fetching operation reports: ', ['error' => $e->getMessage()]);

@@ -153,6 +153,8 @@ class NurseController extends Controller
                 'newNurse' => $newNurse,
                 'message' => 'Nurse created successfully!',
             ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception is thrown
             Log::error('Error adding nurse: ', ['error' => $e->getMessage()]);
@@ -231,6 +233,8 @@ class NurseController extends Controller
                 'last_page' => $nurses->lastPage(),
                 'total' => $nurses->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception is thrown
             Log::error('Error fetching nurses: ', ['error' => $e->getMessage()]);
@@ -313,6 +317,8 @@ class NurseController extends Controller
                 'total' => $nurses->total(),
                 'per_page' => $perPage // Corrected this to provide the correct per_page value
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception is thrown
             Log::error('Error fetching nurses: ', ['error' => $e->getMessage()]);
@@ -394,6 +400,8 @@ class NurseController extends Controller
                 'status' => 'error',
                 'message' => 'Nurse not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a generic error response if any other exception occurs
             return response()->json([
@@ -446,6 +454,8 @@ class NurseController extends Controller
             return response()->json([
                 'nurses' => $nurses,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception occurs
             Log::error('Error fetching nurses: ', ['error' => $e->getMessage()]);
@@ -514,6 +524,8 @@ class NurseController extends Controller
                 'medicines' => $medicines,
                 'vaccines' => $vaccines,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response if an exception occurs
             Log::error('Error fetching nurse dashboard data: ', ['error' => $e->getMessage()]);

@@ -104,6 +104,8 @@ class OfferController extends Controller
                 'message' => 'Offer added successfully',
                 'newOffer' => $offer,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error adding offer: ', ['error' => $e->getMessage()]);
@@ -228,6 +230,8 @@ class OfferController extends Controller
                 'message' => 'Offer updated successfully',
                 'updatedOffer' => $offer,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error updating offer: ', ['error' => $e->getMessage()]);
@@ -314,6 +318,8 @@ class OfferController extends Controller
                 'last_page' => $offers->lastPage(),
                 'total' => $offers->total(),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error fetching offers: ', ['error' => $e->getMessage()]);
@@ -399,6 +405,8 @@ class OfferController extends Controller
                 'last_page' => $offers->lastPage(), // Last page number
                 'total' => $offers->total(), // Total number of offers
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error fetching offers: ', ['error' => $e->getMessage()]);
@@ -481,6 +489,8 @@ class OfferController extends Controller
                 'status' => 'error',
                 'message' => 'Offer not found',
             ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Return a generic error response and log the error
             return response()->json([
@@ -529,6 +539,8 @@ class OfferController extends Controller
             return response()->json([
                 'services' => $services,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Log the error and return a generic error response
             Log::error('Error fetching services: ', ['error' => $e->getMessage()]);
@@ -538,5 +550,10 @@ class OfferController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function getAllOffers()
+    {
+        return response()->json(['offers' => Offer::with('service_offer')->get()]);
     }
 }

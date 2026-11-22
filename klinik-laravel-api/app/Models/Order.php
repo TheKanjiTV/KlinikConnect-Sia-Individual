@@ -16,6 +16,7 @@ class Order extends Model
         'total_price',
         'session_id',
         'user_id',
+        'offer_id',
         'order_id',
         'full_name',
         'gender',
@@ -35,6 +36,6 @@ class Order extends Model
     }
 
     public function notifications(){
-        $this->hasMany(OrderNotification::class);
+        return $this->hasMany(OrderNotification::class);
     }
 }
