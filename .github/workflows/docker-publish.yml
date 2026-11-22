@@ -141,5 +141,24 @@ jobs:
           set -euo pipefail
           cd /opt/klinikconnect
           docker compose --env-file .env.production -f compose.prod.yaml pull db
-          docker compose --env-file .env.production -f compose.prod.yaml up -d --remove-orphans --no-build
+          docker compose --env-file .env.production -f compose.prod.yaml up -d --remove-orphans --no-build --wait --wait-timeout 180
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import re
+
+          path = pathlib.Path('.env.production')
+          content = path.read_text()
+          for name in ('API_IMAGE', 'WEB_IMAGE'):
+              line = name + '=' + os.environ[name]
+              pattern = r'^' + name + r'=.*$'
+              if re.search(pattern, content, re.MULTILINE):
+                  content = re.sub(pattern, lambda match: line, content, flags=re.MULTILINE)
+              else:
+                  content = content.rstrip() + '\n' + line + '\n'
+          temporary = path.with_name('.env.production.next')
+          temporary.write_text(content)
+          temporary.chmod(0o600)
+          temporary.replace(path)
+          PY
           docker image prune -f
