@@ -49,7 +49,8 @@ class IntegrationController extends Controller
 
     public function webhook(Request $request)
     {
-        $secret = config('integrations.verify_secret');
+        $peer = $request->attributes->get('integration_peer');
+        $secret = $peer ? config('integrations.'.$peer.'.signing_secret') : config('integrations.verify_secret');
         $timestamp = $request->header('X-Webhook-Timestamp', '');
         $signature = $request->header('X-Webhook-Signature', '');
         if (!$secret || !ctype_digit($timestamp) || abs(time() - (int) $timestamp) > 300) {
@@ -68,15 +69,16 @@ class IntegrationController extends Controller
             'data' => 'required|array',
         ]);
         $hash = hash('sha256', $request->getContent());
+        $storedEventId = $peer ? hash('sha256', $peer.'|'.$payload['event_id']) : $payload['event_id'];
         $inserted = DB::table('integration_events')->insertOrIgnore([
-            'event_id' => $payload['event_id'],
+            'event_id' => $storedEventId,
             'event_type' => $payload['event_type'],
-            'source' => $payload['source'],
+            'source' => $peer ?? $payload['source'],
             'payload_hash' => $hash,
             'encrypted_payload' => Crypt::encryptString(json_encode($payload, JSON_THROW_ON_ERROR)),
             'created_at' => now(), 'updated_at' => now(),
         ]);
-        $stored = DB::table('integration_events')->where('event_id', $payload['event_id'])->first();
+        $stored = DB::table('integration_events')->where('event_id', $storedEventId)->first();
         if (!$stored || !hash_equals($stored->payload_hash, $hash)) {
             return response()->json(['message' => 'Event ID already belongs to a different payload.'], 409);
         }
@@ -91,18 +93,26 @@ class IntegrationController extends Controller
     {
         return response()->json([
             'billing' => [
+                'name' => config('integrations.billing.name'),
                 'base_url' => config('integrations.billing.base_url'),
-                'configured' => (bool) config('integrations.billing.token'),
-                'required' => 'Billing-issued Sanctum bearer token',
+                'configured' => (bool) config('integrations.billing.token') || (bool) config('integrations.billing.inbound_api_key'),
+                'authentication' => config('integrations.billing.token') ? 'sanctum' : 'api_key',
+                'connection_check' => '/api/v1/integrations/billing/connection',
+                'required' => 'Billing sales endpoints must accept the supplied API key or a Billing-issued Sanctum token',
             ],
             'emr' => [
+                'name' => config('integrations.emr.name'),
                 'base_url' => config('integrations.emr.base_url'),
-                'configured' => (bool) config('integrations.emr.base_url') && (bool) config('integrations.emr.token'),
+                'configured' => false,
+                'inbound_key_configured' => (bool) config('integrations.emr.inbound_api_key'),
+                'required' => 'Doctor and Medical Records endpoints and its inbound API key',
             ],
             'laboratory_pharmacy' => [
+                'name' => config('integrations.laboratory_pharmacy.name'),
                 'base_url' => config('integrations.laboratory_pharmacy.base_url'),
                 'configured' => false,
-                'required' => 'Correct Laboratory and Pharmacy endpoints, deployed URL, and credentials',
+                'credentials_configured' => (bool) config('integrations.laboratory_pharmacy.inbound_api_key'),
+                'required' => 'Laboratory and Pharmacy endpoint contract',
             ],
             'webhook' => ['mode' => 'signed event inbox', 'applies_business_updates' => false],
         ]);
@@ -112,18 +122,18 @@ class IntegrationController extends Controller
     {
         abort_unless(in_array($resource, ['customers', 'orders', 'invoices'], true), 404);
         $token = config('integrations.billing.token');
-        if (!$token) {
-            return response()->json(['message' => 'Billing API token is not configured.'], 503);
+        $key = config('integrations.billing.inbound_api_key');
+        if (!$token && !$key) {
+            return response()->json(['message' => 'Billing API credentials are not configured.'], 503);
         }
         $filters = $request->validate([
             'page' => 'sometimes|integer|min:1', 'per_page' => 'sometimes|integer|min:1|max:100',
             'status' => 'sometimes|string|max:50', 'customer_id' => 'sometimes|integer|min:1',
+            'search' => 'sometimes|string|max:255',
         ]);
 
         try {
-            $response = Http::acceptJson()->withToken($token)->connectTimeout(5)->timeout(15)
-                ->withOptions(['allow_redirects' => false])
-                ->get(rtrim(config('integrations.billing.base_url'), '/').'/sales/'.$resource, $filters);
+            $response = $this->billingRequest()->get('/sales/'.$resource, $filters);
         } catch (ConnectionException $e) {
             return response()->json(['message' => 'Billing server is unavailable.'], 502);
         }
@@ -135,5 +145,38 @@ class IntegrationController extends Controller
         }
 
         return response()->json($response->json());
+    }
+
+    public function billingConnection()
+    {
+        if (!config('integrations.billing.token') && !config('integrations.billing.inbound_api_key')) {
+            return response()->json(['connected' => false, 'reason' => 'missing_credentials'], 503);
+        }
+        try {
+            $response = $this->billingRequest()->get('/sales/invoices', ['per_page' => 1]);
+        } catch (ConnectionException $e) {
+            return response()->json(['connected' => false, 'reason' => 'unreachable'], 502);
+        }
+
+        $connected = $response->successful() && is_array($response->json());
+        return response()->json([
+            'connected' => $connected,
+            'upstream_status' => $response->status(),
+            'reason' => $connected ? 'authenticated_sales_access' : 'upstream_rejected_request',
+        ]);
+    }
+
+    private function billingRequest(): \Illuminate\Http\Client\PendingRequest
+    {
+        $request = Http::acceptJson()->baseUrl(rtrim(config('integrations.billing.base_url'), '/'))
+            ->connectTimeout(5)->timeout(15)->withOptions(['allow_redirects' => false]);
+        if ($token = config('integrations.billing.token')) {
+            $request = $request->withToken($token);
+        }
+        if ($key = config('integrations.billing.inbound_api_key')) {
+            $request = $request->withHeaders(['X-API-Key' => $key]);
+        }
+
+        return $request;
     }
 }

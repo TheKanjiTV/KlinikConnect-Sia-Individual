@@ -7,7 +7,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Artisan::command('integrations:send-webhook {file : Path to a JSON event payload}', function () {
+Artisan::command('integrations:send-webhook {file : Path to a JSON event payload} {--peer= : billing, emr, or laboratory_pharmacy}', function () {
     $path = $this->argument('file');
     if (!is_file($path) || !is_readable($path)) {
         $this->error('Event payload file could not be read.');
@@ -15,7 +15,7 @@ Artisan::command('integrations:send-webhook {file : Path to a JSON event payload
     }
     try {
         $payload = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
-        app(\App\Services\SendIntegrationWebhook::class)->send($payload);
+        app(\App\Services\SendIntegrationWebhook::class)->send($payload, $this->option('peer'));
         $this->info('Webhook delivered.');
         return 0;
     } catch (\Throwable $e) {

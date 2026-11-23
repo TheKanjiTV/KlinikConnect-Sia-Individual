@@ -9,12 +9,24 @@ class IntegrationApiKey
 {
     public function handle(Request $request, Closure $next)
     {
-        $expected = config('integrations.inbound_api_key');
         $provided = $request->header('X-API-Key', '');
-        if (!$expected || !$provided || !hash_equals($expected, $provided)) {
+        if (!$provided) {
             return response()->json(['message' => 'Invalid integration API key.'], 401);
         }
 
-        return $next($request);
+        $expected = config('integrations.inbound_api_key');
+        if ($expected && hash_equals($expected, $provided)) {
+            return $next($request);
+        }
+
+        foreach (['billing', 'emr', 'laboratory_pharmacy'] as $peer) {
+            $expected = config('integrations.'.$peer.'.outbound_api_key');
+            if ($expected && hash_equals($expected, $provided)) {
+                $request->attributes->set('integration_peer', $peer);
+                return $next($request);
+            }
+        }
+
+        return response()->json(['message' => 'Invalid integration API key.'], 401);
     }
 }

@@ -162,6 +162,16 @@ KlinikConnect signs outgoing webhooks using `PATIENT_APPOINTMENT_WEBHOOK_SIGNING
 
 The six `PATIENT_APPOINTMENT_*` variables describe KlinikConnect's side of the connection. `PATIENT_APPOINTMENT_WEBHOOK_URL` is this application's incoming URL. Each peer should receive its own credentials before independent production access is enabled.
 
-Authenticated administrators can inspect `GET /api/v1/integrations/status` and read `GET /api/v1/integrations/billing/{resource}`, where `resource` is `customers`, `orders`, or `invoices`. The connector uses the supplied Billing contract's `/api/v1/sales/` paths. Set `BILLING_API_TOKEN` to a Sanctum token issued by Billing. Generated KlinikConnect keys do not replace that token.
+Authenticated administrators can inspect `GET /api/v1/integrations/status` and read `GET /api/v1/integrations/billing/{resource}`, where `resource` is `customers`, `orders`, or `invoices`. The connector uses the supplied Billing contract's `/api/v1/sales/` paths. Use the peer credentials described below. The sales endpoints must authorize the selected credential on the Billing side.
 
-The supplied EMR inventory needs its deployed URL and JWT credentials. The Laboratory and Pharmacy system owner must supply the correct endpoints, deployed URL, and authentication contract. Configure `LAB_PHARMACY_BASE_URL` and `LAB_PHARMACY_API_TOKEN` once those details are available.
+The `HOSPITAL_EMR_*` settings belong to the Doctor and Medical Records system. Its REST endpoint contract and inbound API key remain pending. The Laboratory and Pharmacy REST endpoint contract also remains pending. URLs and keys alone do not enable record synchronization.
+
+### Peer credentials and updated Billing contract
+
+The provided `BILLING_ACCOUNTING_*`, `HOSPITAL_EMR_*`, and `LAB_PHARMACY_*` variables describe each peer's credentials from that peer's perspective. A peer's `OUTBOUND_API_KEY` is accepted by KlinikConnect's existing integration endpoints as `X-API-Key`. Incoming webhooks are verified with that peer's `WEBHOOK_SIGNING_SECRET`. Event IDs are isolated per authenticated peer, and the stored source is bound to the authenticated key.
+
+For an outgoing webhook to a named peer, KlinikConnect sends the peer's `INBOUND_API_KEY` and signs with its `WEBHOOK_VERIFY_SECRET`. The timestamp and HMAC format are the same as the existing webhook contract above. Use `php artisan integrations:send-webhook /path/to/event.json --peer=billing`, `--peer=emr`, or `--peer=laboratory_pharmacy`. Delivery requires the recipient to expose the supplied URL and implement the same signing protocol. KlinikConnect's existing unqualified command remains available for the original default recipient.
+
+The updated Billing base URL is `http://54.206.187.155/api/v1`. Its documented customer, order, and invoice endpoints remain under `/sales/`. The connector can send the supplied inbound key as `X-API-Key`, and it retains optional `BILLING_API_TOKEN` support for Billing's documented Sanctum authentication. Supplied keys are stored only in ignored or server environment files. `GET /api/v1/integrations/billing/connection` returns the actual authenticated invoice probe result without exposing invoice contents or credentials.
+
+During the November 23 connection check, Billing health returned 200, the supplied key returned 401 on the documented sales API using both Bearer and `X-API-Key`, and POST to its supplied `/api/integration/webhooks` URL returned 404. The Doctor and Medical Records URL on port 3000 timed out. Those counterpart issues must be resolved before end-to-end exchange can be verified. The updated Billing document lists Sanctum and sales permissions for the sales endpoints and does not document the supplied integration webhook protocol.

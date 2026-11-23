@@ -7,11 +7,19 @@ use RuntimeException;
 
 class SendIntegrationWebhook
 {
-    public function send(array $payload)
+    public function send(array $payload, ?string $peer = null)
     {
         $url = config('integrations.outbound_webhook_url');
         $key = config('integrations.outbound_api_key');
         $secret = config('integrations.signing_secret');
+        if ($peer !== null) {
+            if (!in_array($peer, ['billing', 'emr', 'laboratory_pharmacy'], true)) {
+                throw new RuntimeException('Unknown integration recipient.');
+            }
+            $url = config('integrations.'.$peer.'.webhook_url');
+            $key = config('integrations.'.$peer.'.inbound_api_key');
+            $secret = config('integrations.'.$peer.'.verify_secret');
+        }
         if (!$url || !$key || !$secret) {
             throw new RuntimeException('Outbound webhook URL, API key, and signing secret must be configured.');
         }

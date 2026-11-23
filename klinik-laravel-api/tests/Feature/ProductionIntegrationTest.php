@@ -236,3 +236,56 @@ test('clinical and catalog records can be created updated and deleted', function
         $this->postJson('/api/v1/delete-'.$resource, [$idField => $id])->assertOk();
     }
 });
+
+test('peer keys select their signing secrets and isolate receipt IDs', function () {
+    config([
+        'integrations.billing.outbound_api_key' => 'billing-out',
+        'integrations.billing.signing_secret' => 'billing-sign',
+        'integrations.laboratory_pharmacy.outbound_api_key' => 'lab-out',
+        'integrations.laboratory_pharmacy.signing_secret' => 'lab-sign',
+    ]);
+    $body = json_encode(['event_id' => 'shared-1', 'event_type' => 'connection.test', 'source' => 'peer', 'data' => ['ok' => true]]);
+    $timestamp = (string) time();
+    foreach ([['billing-out', 'billing-sign'], ['lab-out', 'lab-sign']] as [$key, $secret]) {
+        $this->withHeader('X-API-Key', $key)->getJson('/api/v1/integrations/health')->assertOk();
+        $headers = ['HTTP_X_API_KEY' => $key, 'HTTP_ACCEPT' => 'application/json', 'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_WEBHOOK_TIMESTAMP' => $timestamp,
+            'HTTP_X_WEBHOOK_SIGNATURE' => 'sha256='.hash_hmac('sha256', $timestamp.'.'.$body, $secret)];
+        $this->call('POST', '/api/v1/integrations/webhook', [], [], [], $headers, $body)->assertStatus(202);
+        $this->call('POST', '/api/v1/integrations/webhook', [], [], [], $headers, $body)->assertOk()->assertJsonPath('status', 'duplicate');
+    }
+    expect(DB::table('integration_events')->pluck('source')->sort()->values()->all())->toBe(['billing', 'laboratory_pharmacy']);
+    $headers['HTTP_X_WEBHOOK_SIGNATURE'] = 'sha256='.hash_hmac('sha256', $timestamp.'.'.$body, 'billing-sign');
+    $this->call('POST', '/api/v1/integrations/webhook', [], [], [], $headers, $body)->assertUnauthorized();
+});
+
+test('peer delivery uses the recipient inbound key and verification secret', function () {
+    config([
+        'integrations.billing.webhook_url' => 'https://billing.example.test/api/integration/webhooks',
+        'integrations.billing.inbound_api_key' => 'billing-in',
+        'integrations.billing.verify_secret' => 'billing-verify',
+    ]);
+    Http::fake(['billing.example.test/*' => Http::response(['status' => 'received'], 202)]);
+    app(\App\Services\SendIntegrationWebhook::class)->send([
+        'event_id' => 'peer-1', 'event_type' => 'connection.test', 'source' => 'klinikconnect', 'data' => ['ok' => true],
+    ], 'billing');
+    Http::assertSent(function ($request) {
+        $timestamp = $request->header('X-Webhook-Timestamp')[0];
+        return $request->hasHeader('X-API-Key', 'billing-in')
+            && $request->hasHeader('X-Webhook-Signature', 'sha256='.hash_hmac('sha256', $timestamp.'.'.$request->body(), 'billing-verify'));
+    });
+});
+
+test('billing API key mode reports actual upstream authentication failures', function () {
+    $this->actingAs(User::factory()->create(['is_admin' => true]));
+    config(['integrations.billing.token' => null, 'integrations.billing.inbound_api_key' => 'provided-key']);
+    Http::fake(['*/sales/invoices*' => Http::sequence()
+        ->push(['message' => 'Unauthenticated'], 401)
+        ->push(['message' => 'Unauthenticated'], 401)
+        ->push(['data' => []])]);
+    $this->getJson('/api/v1/integrations/billing/invoices')->assertStatus(502)->assertJsonPath('upstream_status', 401);
+    $this->getJson('/api/v1/integrations/billing/connection')->assertOk()
+        ->assertJsonPath('connected', false)->assertJsonPath('upstream_status', 401);
+    Http::assertSent(fn ($request) => $request->hasHeader('X-API-Key', 'provided-key') && !$request->hasHeader('Authorization'));
+    $this->getJson('/api/v1/integrations/billing/connection')->assertOk()->assertJsonPath('connected', true);
+});

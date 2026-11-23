@@ -49,6 +49,7 @@ Route::prefix('v1/integrations')->group(function () {
     });
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('/status', [\App\Http\Controllers\IntegrationController::class, 'status']);
+        Route::get('/billing/connection', [\App\Http\Controllers\IntegrationController::class, 'billingConnection']);
         Route::get('/billing/{resource}', [\App\Http\Controllers\IntegrationController::class, 'billing']);
     });
 });
